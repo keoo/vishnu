@@ -382,20 +382,12 @@ if(NOT CLIENT_ONLY)
     database/DbConfiguration.cpp
     database/DbFactory.cpp
     database/Database.cpp
-    database/DatabaseResult.cpp)
+    database/DatabaseResult.cpp
+    database/SociDatabase.cpp)
   set(utils_server_SRCS utils/utilServer.cpp)
-
-  if(MYSQL_FOUND AND ENABLE_MYSQL)
-    set(database_SRCS ${database_SRCS} database/MYSQLDatabase.cpp)
-    include_directories(${MYSQL_INCLUDE_DIR})
-    set(DB_LIBS ${DATABASE_LIBS})
-  endif()
-   
-  if(POSTGRESQL_FOUND AND ENABLE_POSTGRESQL)
-    set(database_SRCS ${database_SRCS} database/POSTGREDatabase.cpp)
-    include_directories(${DATABASE_INCLUDE_DIR})
-    set(DB_LIBS ${DATABASE_LIBS})
-  endif()
+  # FIXME: hard coded path, needs to write a FindSOCI.cmake
+  include_directories("/usr/include")
+  set(DB_LIBS ${DATABASE_LIBS} "soci_core")
 
   add_library(vishnu-core-server ${database_SRCS} ${utils_server_SRCS})
   set_target_properties(vishnu-core-server PROPERTIES VERSION ${VISHNU_VERSION})
