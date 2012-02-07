@@ -22,10 +22,10 @@ SociDatabase::SociDatabase(DbConfiguration dbConfig)
   int poolSz = mconfig.getDbPoolSize();
   pool_.reset(new soci::connection_pool(poolSz));
 
-  boost::format fmtr("%1%://db=%2% port=%3% user=%4% password=%5%");
+  boost::format fmtr("%1%://dbname=%2% port=%3% user=%4% password=%5%");
   switch (dbType) {
   case DbConfiguration::POSTGRESQL:
-    fmtr % "postgresql" % dbName % dbPort % dbUser % dbPassword;
+    fmtr % "postgresql" % dbName % ((dbPort == 0)?5432:dbPort) % dbUser % dbPassword;
     break;
   case DbConfiguration::MYSQL:
     fmtr % "mysql" % dbName % dbPort % dbUser % dbPassword;
