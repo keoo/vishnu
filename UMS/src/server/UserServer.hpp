@@ -1,3 +1,39 @@
+/* This file is a part of VISHNU.
+
+* Copyright SysFera SAS (2011) 
+
+* contact@sysfera.com
+
+* This software is a computer program whose purpose is to provide 
+* access to distributed computing resources.
+*
+* This software is governed by the CeCILL  license under French law and
+* abiding by the rules of distribution of free software.  You can  use, 
+* modify and/ or redistribute the software under the terms of the CeCILL
+* license as circulated by CEA, CNRS and INRIA at the following URL
+* "http://www.cecill.info". 
+
+* As a counterpart to the access to the source code and  rights to copy,
+* modify and redistribute granted by the license, users are provided only
+* with a limited warranty  and the software's author,  the holder of the
+* economic rights,  and the successive licensors  have only  limited
+* liability. 
+*
+* In this respect, the user's attention is drawn to the risks associated
+* with loading,  using,  modifying and/or developing or reproducing the
+* software by the user in light of its specific status of free software,
+* that may mean  that it is complicated to manipulate,  and  that  also
+* therefore means  that it is reserved for developers  and  experienced
+* professionals having in-depth computer knowledge. Users are therefore
+* encouraged to load and test the software's suitability as regards their
+* requirements in conditions enabling the security of their systems and/or 
+* data to be ensured and,  more generally, to use and operate it in the 
+* same conditions as regards security. 
+*
+* The fact that you are presently reading this means that you have had
+* knowledge of the CeCILL license and that you accept its terms.
+*/
+
 /**
 * \file UserServer.hpp
 * \brief This file presents the Class which manipulates VISHNU user data on server side.
@@ -18,6 +54,8 @@
 #include "UMS_Data.hpp"
 #include "UMS_Data_forward.hpp"
 #include "SessionServer.hpp"
+
+#include "user.pb.h"
 
 class SessionServer;
 
@@ -56,6 +94,11 @@ public:
   */
   int
   add(UMS_Data::User*& user, int vishnuId, std::string sendmailScriptPath);
+
+  int
+  add(UMS_Data_Proto::User& user, int vishnuId, std::string sendmailScriptPath);
+  //int
+  //add(UMS_Data::Proto::User& user, int vishnuId, std::string sendmailScriptPath);
   /**
   * \brief Function to update user information
   * \fn int update(UMS_Data::User* user)
@@ -65,13 +108,21 @@ public:
   int
   update(UMS_Data::User* user);
   /**
+   * \brief Function to update user information
+   * \fn int update(UMS_Data::User*& user)
+   * \param user The user data structure
+   * \return raises an exception on error
+   */
+  int
+  update(const UMS_Data_Proto::User& user);
+  /**
   * \brief Function to delete VISHNU user
   * \fn int deleteUser(UMS_Data::User user)
   * \param user The user data structure
   * \return raises an exception on error
   */
   int
-  deleteUser(UMS_Data::User user);
+  deleteUser(const UMS_Data_Proto::User& user);
   /**
   * \brief Function to change VISHNU user password
   * \fn int changePassword(std::string newPassword)
@@ -167,6 +218,7 @@ private:
   * \brief The user data structure
   */
   UMS_Data::User muser;
+  //UMS_Data_Proto::User guser;
   /**
   * \brief An instance of vishnu database
   */

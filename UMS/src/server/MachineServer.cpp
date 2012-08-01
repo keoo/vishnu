@@ -1,3 +1,39 @@
+/* This file is a part of VISHNU.
+
+* Copyright SysFera SAS (2011) 
+
+* contact@sysfera.com
+
+* This software is a computer program whose purpose is to provide 
+* access to distributed computing resources.
+*
+* This software is governed by the CeCILL  license under French law and
+* abiding by the rules of distribution of free software.  You can  use, 
+* modify and/ or redistribute the software under the terms of the CeCILL
+* license as circulated by CEA, CNRS and INRIA at the following URL
+* "http://www.cecill.info". 
+
+* As a counterpart to the access to the source code and  rights to copy,
+* modify and redistribute granted by the license, users are provided only
+* with a limited warranty  and the software's author,  the holder of the
+* economic rights,  and the successive licensors  have only  limited
+* liability. 
+*
+* In this respect, the user's attention is drawn to the risks associated
+* with loading,  using,  modifying and/or developing or reproducing the
+* software by the user in light of its specific status of free software,
+* that may mean  that it is complicated to manipulate,  and  that  also
+* therefore means  that it is reserved for developers  and  experienced
+* professionals having in-depth computer knowledge. Users are therefore
+* encouraged to load and test the software's suitability as regards their
+* requirements in conditions enabling the security of their systems and/or 
+* data to be ensured and,  more generally, to use and operate it in the 
+* same conditions as regards security. 
+*
+* The fact that you are presently reading this means that you have had
+* knowledge of the CeCILL license and that you accept its terms.
+*/
+
 /**
 * \file MachineServer.cpp
 * \brief This file implements the Class which manipulates VISHNU machine data on server side.
@@ -59,18 +95,7 @@ MachineServer::add(int vishnuId) {
     if (userServer.isAdmin()) {
 
       vishnuid = convertToString(vishnuId);
-
-// Start transaction
-//      int ret = mdatabaseVishnu->startTransaction();
-//      machineCpt = convertToInt(getAttrVishnu("machinecpt", vishnuid, ret));
-//      incrementCpt("machinecpt", machineCpt, ret);
-//      machineCpt = convertToInt(getAttrVishnu("machinecpt", vishnuid, ret));
-//      mdatabaseVishnu->endTransaction(ret);
-      //To get the counter
-      int counter;
-      counter = ninja("machinecpt", vishnuid);
-
-      machineCpt = counter;
+      machineCpt = convertToInt(getAttrVishnu("machinecpt", vishnuid));
 
       //To get the formatidmachine
       formatidmachine = getAttrVishnu("formatidmachine", vishnuid);
@@ -85,6 +110,7 @@ MachineServer::add(int vishnuId) {
 
         //if the machine id is generated
         if (idMachineGenerated.size() != 0) {
+          incrementCpt("machinecpt", machineCpt);
           mmachine->setMachineId(idMachineGenerated);
 
           //if the machineId does not exist
@@ -285,10 +311,10 @@ MachineServer::getPublicKey() {
 }
 
 /**
-* \brief Function to get the machine
-* \return The name of the machine
+* \brief Function to get the machine 
+* \return The name of the machine 
 */
-std::string
+std::string 
 MachineServer::getMachineName() {
 
   std::string  machineName = getAttribut("where machineid='"+getData()->getMachineId()+"'", "name");
@@ -298,12 +324,12 @@ MachineServer::getMachineName() {
 
 /**
 * \brief Function to check the machineId
-* \return raises an exception
+* \return raises an exception 
 */
 void MachineServer::checkMachine() {
 
   if(getAttribut("where machineid='"+mmachine->getMachineId()+"'").size()==0){
-    throw UMSVishnuException(ERRCODE_UNKNOWN_MACHINE, mmachine->getMachineId()+" does not exist among the defined"
+    throw UMSVishnuException(ERRCODE_UNKNOWN_MACHINE, mmachine->getMachineId()+" does not exist among the defined" 
                                                                  " machines by VISHNU System");
   }
   if(getAttribut("where status=1 and  machineid='"+mmachine->getMachineId()+"'").size() == 0) {

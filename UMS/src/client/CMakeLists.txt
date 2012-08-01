@@ -1,0 +1,36 @@
+
+link_directories(
+  ${VISHNU_EXCEPTION_INCLUDE_DIR}
+)
+
+include_directories(
+  ${DIET_INCLUDE_DIR}
+  ${EMF_DATA_DIR}
+  ${UMS_DATA_DIR}
+  ${EMF4CPP_INCLUDE_DIR}
+  ${VISHNU_EXCEPTION_INCLUDE_DIR}
+  ${UTILVISHNU_SOURCE_DIR}
+  ${Boost_INCLUDE_DIRS}
+  ${PROTOBUF_SOURCE_DIR}
+  )
+message ("PROTOBUF_SOURCE_DIR="${PROTOBUF_SOURCE_DIR})
+add_library(ums-client-proxy STATIC
+   SessionProxy.cpp
+   UserProxy.cpp
+   MachineProxy.cpp
+   LocalAccountProxy.cpp
+   ConfigurationProxy.cpp
+   OptionValueProxy.cpp
+   utilsClient.cpp
+   UtilsProxy.cpp
+   ${PROTOBUF_SOURCE_DIR}/user.pb.cc 
+)
+SET_TARGET_PROPERTIES(ums-client-proxy PROPERTIES COMPILE_FLAGS "-fPIC")
+
+target_link_libraries(ums-client-proxy
+  ${DIET_CLIENT_LIBRARIES}
+  emf4cpp-UMS_Data
+  exception-vishnu
+  crypt
+  ${GOOGLE_PROTOBUF_lib}
+)

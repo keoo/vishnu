@@ -1,3 +1,39 @@
+/* This file is a part of VISHNU.
+
+* Copyright SysFera SAS (2011) 
+
+* contact@sysfera.com
+
+* This software is a computer program whose purpose is to provide 
+* access to distributed computing resources.
+*
+* This software is governed by the CeCILL  license under French law and
+* abiding by the rules of distribution of free software.  You can  use, 
+* modify and/ or redistribute the software under the terms of the CeCILL
+* license as circulated by CEA, CNRS and INRIA at the following URL
+* "http://www.cecill.info". 
+
+* As a counterpart to the access to the source code and  rights to copy,
+* modify and redistribute granted by the license, users are provided only
+* with a limited warranty  and the software's author,  the holder of the
+* economic rights,  and the successive licensors  have only  limited
+* liability. 
+*
+* In this respect, the user's attention is drawn to the risks associated
+* with loading,  using,  modifying and/or developing or reproducing the
+* software by the user in light of its specific status of free software,
+* that may mean  that it is complicated to manipulate,  and  that  also
+* therefore means  that it is reserved for developers  and  experienced
+* professionals having in-depth computer knowledge. Users are therefore
+* encouraged to load and test the software's suitability as regards their
+* requirements in conditions enabling the security of their systems and/or 
+* data to be ensured and,  more generally, to use and operate it in the 
+* same conditions as regards security. 
+*
+* The fact that you are presently reading this means that you have had
+* knowledge of the CeCILL license and that you accept its terms.
+*/
+
 /**
 * \file UserServer.cpp
 * \brief This file implements the Class which manipulates VISHNU user data on server side.
@@ -76,19 +112,8 @@ UserServer::add(UMS_Data::User*& user, int vishnuId, std::string sendmailScriptP
       user->setPassword(pwd.substr(0,PASSWORD_MAX_SIZE));
 
       vishnuid = convertToString(vishnuId);
-
-// Start transaction
-//      int ret = mdatabaseVishnu->startTransaction();
-      //To get the counter
-      int counter;
-      counter = ninja("userCpt", vishnuid);
-
       //To get the user counter
-//      userCpt = convertToInt(getAttrVishnu("usercpt", vishnuid, ret));
-//      incrementCpt("usercpt", userCpt, ret);
-//      userCpt = convertToInt(getAttrVishnu("usercpt", vishnuid, ret));
-//      mdatabaseVishnu->endTransaction(ret);
-      userCpt = counter;
+      userCpt = convertToInt(getAttrVishnu("usercpt", vishnuid));
 
       //To get the formatiduser
       formatiduser = getAttrVishnu("formatiduser", vishnuid).c_str();
@@ -105,6 +130,7 @@ UserServer::add(UMS_Data::User*& user, int vishnuId, std::string sendmailScriptP
         //if the userId is generated
         if (idUserGenerated.size() != 0) {
 
+          incrementCpt("usercpt", userCpt);
           user->setUserId(idUserGenerated);
           //To get the password encrypted
           passwordCrypted = vishnu::cryptPassword(user->getUserId(), user->getPassword());
@@ -138,6 +164,73 @@ UserServer::add(UMS_Data::User*& user, int vishnuId, std::string sendmailScriptP
         SystemException e (ERRCODE_SYSTEM, "The formatiduser is not defined");
         throw e;
       }
+    } //END if the user is an admin
+    else {
+      UMSVishnuException e (ERRCODE_NO_ADMIN);
+      throw e;
+    }
+  } //END if the user exists
+  else {
+    UMSVishnuException e (ERRCODE_UNKNOWN_USER);
+    throw e;
+  }
+  return 0;
+}//END: add(UMS_Data::User*& user)
+
+
+
+int
+UserServer::add(UMS_Data_Proto::User& user, int vishnuId, std::string sendmailScriptPath) {
+  std::string pwd;
+  
+  std::string sqlInsert = "insert into users (vishnu_vishnuid, userid, pwd, firstname, lastname,"
+  "privilege, email, passwordstate, status) values ";
+
+
+  std::string idUserGenerated;
+  std::string passwordCrypted;
+  std::string formatiduser;
+
+  if (exist()) {
+    if (isAdmin()) {
+
+      //Generation of password
+      pwd = generatePassword(user.lastname(), user.firstname());
+      user.set_password(pwd.substr(0,PASSWORD_MAX_SIZE));
+
+
+          //Generation of userid
+          idUserGenerated = vishnu::getObjectId(vishnuId,
+              "formatiduser",
+              USER,
+              user.lastname());
+
+
+          user.set_userid(idUserGenerated);
+          //To get the password encrypted
+          passwordCrypted = vishnu::cryptPassword(user.userid(), user.password());
+
+
+
+          //If the user to add exists
+          if (getAttribut("where userid='"+user.userid()+"'").size() == 0) {
+
+            //To insert user on the database
+            mdatabaseVishnu->process(sqlInsert + "(" + convertToString(vishnuId)+", "
+            "'"+user.userid()+"','"+passwordCrypted+"','"
+            + user.firstname()+"','"+user.lastname()+"',"+
+            convertToString(user.privilege()-1) +",'"+user.email() +"', "
+            "0, "+convertToString(user.status()-1)+")");
+
+            //Send email
+            //std::string emailBody = getMailContent(*user, true);
+            //sendMailToUser(*user, emailBody, "Vishnu message: user created", sendmailScriptPath);
+
+          }// END If the user to add exists
+          else {
+            UMSVishnuException e (ERRCODE_USERID_EXISTING);
+            throw e;
+          }
     } //END if the user is an admin
     else {
       UMSVishnuException e (ERRCODE_NO_ADMIN);
@@ -227,6 +320,83 @@ UserServer::update(UMS_Data::User *user) {
   return 0;
 } //END: update(UMS_Data::User *user)
 
+
+/**
+* \brief Function to update user information
+* \fn int update(UMS_Data::User*& user)
+* \param user The user data structure
+* \return raises an exception on error
+*/
+int
+UserServer::update(const UMS_Data_Proto::User& user) {
+  std::string sqlCommand = "";
+
+  if (exist()) {
+    if (isAdmin()) {
+      //if the user whose information will be updated exists
+      if (getAttribut("where userid='"+user.userid()+"'").size() != 0) {
+
+        //if a new fisrtname has been defined
+        if (user.firstname().size() != 0) {
+          sqlCommand.append("UPDATE users SET firstname='"+user.firstname()+"'"
+          " where userid='"+user.userid()+"';");
+        }
+
+        //if a new lastname has been defined
+        if (user.lastname().size() != 0) {
+          sqlCommand.append("UPDATE users SET lastname='"+user.lastname()+"'"
+          " where userid='"+user.userid()+"';");
+        }
+
+        //if a new email has been defined
+        if (user.email().size() != 0) {
+          sqlCommand.append("UPDATE users SET email='"+user.email()+"'"
+          " where userid='"+user.userid()+"';");
+        }
+
+        //if the user will be locked
+        if (user.status() == 0) {
+          //if the user is not already locked
+          if (convertToInt(getAttribut("where userid='"+user.userid()+"'", "status")) != 0) {
+            sqlCommand.append("UPDATE users SET status="+convertToString(user.status())+""
+            " where userid='"+user.userid()+"';");
+          } //End if the user is not already locked
+          else {
+            UMSVishnuException e (ERRCODE_USER_ALREADY_LOCKED);
+            throw e;
+          }
+        } //End if the user will be locked
+        else {
+          sqlCommand.append("UPDATE users SET status="+convertToString(user.status())+""
+          " where userid='"+user.userid()+"';");
+        }
+
+        // if the user whose privilege will be updated is not an admin
+        if (convertToInt(getAttribut("where userid='"+user.userid()+"'", "privilege")) != 1) {
+          sqlCommand.append("UPDATE users SET privilege="+convertToString(user.privilege())+""
+          " where userid='"+user.userid()+"';");
+        }
+
+        mdatabaseVishnu->process(sqlCommand.c_str());
+
+      } // End if the user whose information will be updated exists
+      else {
+        UMSVishnuException e (ERRCODE_UNKNOWN_USERID);
+        throw e;
+      }
+    } //END if the user is an admin
+    else {
+      UMSVishnuException e (ERRCODE_NO_ADMIN);
+      throw e;
+    }
+  } //END if the user exists
+  else {
+    UMSVishnuException e (ERRCODE_UNKNOWN_USER);
+    throw e;
+  }
+  return 0;
+} //END: update(const UMS_Data_Proto::User& user)
+
 /**
 * \brief Function to delete VISHNU user
 * \fn int deleteUser(UMS_Data::User user)
@@ -234,17 +404,17 @@ UserServer::update(UMS_Data::User *user) {
 * \return raises an exception on error
 */
 int
-UserServer::deleteUser(UMS_Data::User user) {
+UserServer::deleteUser(const UMS_Data_Proto::User& user) {
 
   //If the user to delete is not the super VISHNU admin
-  if (user.getUserId().compare(ROOTUSERNAME) != 0) {
+  if (user.userid().compare(ROOTUSERNAME) != 0) {
     //If the user exists
     if (exist()) {
       if (isAdmin()) {
         //if the user who will be deleted exist
-        if (getAttribut("where userid='"+user.getUserId()+"'").size() != 0) {
+        if (getAttribut("where userid='"+user.userid()+"'").size() != 0) {
           //Execution of the sql code to delete the user
-          mdatabaseVishnu->process("DELETE FROM users where userid='"+user.getUserId()+"'");
+          mdatabaseVishnu->process("DELETE FROM users where userid='"+user.userid()+"'");
         } // End if the user who will be deleted exist
         else {
           UMSVishnuException e (ERRCODE_UNKNOWN_USERID);
@@ -389,7 +559,7 @@ void
 UserServer::init(){
   std::string numUser;
   std::string sessionState;
-
+  std::cout << "+++++++++++++ in  init *************** \n";
   //if userId and password have not been defined
   if ((muser.getUserId().size() == 0) && (muser.getUserId().size() == 0)) {
     //To get the users_numuserid by using the sessionServer
@@ -397,6 +567,7 @@ UserServer::init(){
     msessionServer->getAttribut("where"
     " sessionkey='"+msessionServer->getData().getSessionKey()+"'", "users_numuserid");
 
+  std::cout << "+++++++++++++ in  init  2 *************** \n";
     //if the session key is found
     if (numUser.size() != 0) {
       //To get the session state
@@ -404,12 +575,18 @@ UserServer::init(){
       msessionServer->getAttribut("where"
       " sessionkey='"+msessionServer->getData().getSessionKey()+"'", "state");
 
+  std::cout << "+++++++++++++ in  init  3 *************** \n";
+  std::cout << "+++++++++++++ sessionState=" << convertToInt(sessionState) << " *************** \n";
       //if the session is active
       if (convertToInt(sessionState) == 1) {
+      std::cout << "+++++++++++++ in  init  4 *************** \n";
         muser.setUserId(getAttribut("where numuserid='"+numUser+"'", "userid"));
         muser.setPassword(getAttribut("where numuserid='"+numUser+"'", "pwd"));
+      std::cout << "+++++++++++++ in  init  5 *************** \n";
+
       } //End if the session is active
       else {
+        std::cout << "+++++++++++++ in  init  6 *************** \n";
         UMSVishnuException e (ERRCODE_SESSIONKEY_EXPIRED);
         throw e;
       }
@@ -647,11 +824,11 @@ UserServer::getMailContent(const UMS_Data::User& user, bool flagAdduser) {
 }
 
 /**
-* \brief Function to get the user account login
+* \brief Function to get the user account login 
 * \param machineId The machine identifier of machine on which the user have a account
-* \return the user account login
+* \return the user account login 
 */
-std::string
+std::string 
 UserServer::getUserAccountLogin(const std::string& machineId) {
 
   init();

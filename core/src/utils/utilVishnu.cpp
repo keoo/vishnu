@@ -1,3 +1,39 @@
+/* This file is a part of VISHNU.
+
+* Copyright SysFera SAS (2011) 
+
+* contact@sysfera.com
+
+* This software is a computer program whose purpose is to provide 
+* access to distributed computing resources.
+*
+* This software is governed by the CeCILL  license under French law and
+* abiding by the rules of distribution of free software.  You can  use, 
+* modify and/ or redistribute the software under the terms of the CeCILL
+* license as circulated by CEA, CNRS and INRIA at the following URL
+* "http://www.cecill.info". 
+
+* As a counterpart to the access to the source code and  rights to copy,
+* modify and redistribute granted by the license, users are provided only
+* with a limited warranty  and the software's author,  the holder of the
+* economic rights,  and the successive licensors  have only  limited
+* liability. 
+*
+* In this respect, the user's attention is drawn to the risks associated
+* with loading,  using,  modifying and/or developing or reproducing the
+* software by the user in light of its specific status of free software,
+* that may mean  that it is complicated to manipulate,  and  that  also
+* therefore means  that it is reserved for developers  and  experienced
+* professionals having in-depth computer knowledge. Users are therefore
+* encouraged to load and test the software's suitability as regards their
+* requirements in conditions enabling the security of their systems and/or 
+* data to be ensured and,  more generally, to use and operate it in the 
+* same conditions as regards security. 
+*
+* The fact that you are presently reading this means that you have had
+* knowledge of the CeCILL license and that you accept its terms.
+*/
+
 /**
 * \file utilVishnu.cpp
 * \brief This file implements the utils functions of the vishnu system
@@ -25,6 +61,78 @@
 #include "TMS_Data.hpp"
 
 namespace bfs=boost::filesystem; // an alias for boost filesystem namespace
+
+std::ostream& operator << (std::ostream& out, UMS_Data_Proto::User::PrivilegeType& value) {
+
+  if(value==UMS_Data_Proto::User::USER) {
+    //out << "USER";
+    out << "0";
+  }
+  if(value==UMS_Data_Proto::User::ADMIN) {
+    //out << "ADMIN";
+    out << "1";
+  }
+
+  return out;
+}
+
+
+std::ostream& operator << (std::ostream& out, UMS_Data_Proto::User::StatusType& value) {
+
+  if(value==UMS_Data_Proto::User::INACTIVE) {
+    //out << "USER";
+    out << "0";
+  }
+  if(value==UMS_Data_Proto::User::ACTIVE) {
+    //out << "ADMIN";
+    out << "1";
+  }
+
+  return out;
+}
+
+std::istream& operator >> (std::istream& in, UMS_Data_Proto::User::PrivilegeType& value) {
+
+  std::string token;
+
+  in >> token;
+  std::cout << "token :"  << token << " size "<< token.size() <<   "\n";
+  if(token=="0") {
+    value = UMS_Data_Proto::User::USER;
+    std::cout << "OK \n"; 
+  }
+  else if(token=="1") {
+    value = UMS_Data_Proto::User::ADMIN;
+  } else {
+    std::cout << "KO  \n"; 
+    //throw UserException(ERRCODE_INVALID_PARAM,"UNKNOWN Privilege Type");
+    throw std::runtime_error("UNKNOWN Privilege Type");
+  }
+
+  return in;
+}
+
+std::istream& operator >> (std::istream& in, UMS_Data_Proto::User::StatusType& value) {
+
+  std::string token;
+
+  in >> token;
+
+  std::cout << "token status:"  << token << " size "<< token.size() <<   "\n";
+  if(token=="0") {
+    value = UMS_Data_Proto::User::INACTIVE;
+  }
+  else if(token=="1") {
+    std::cout << "OK \n"; 
+    value = UMS_Data_Proto::User::ACTIVE;
+  } else {
+    std::cout << "KO  \n"; 
+    //throw UserException(ERRCODE_INVALID_PARAM,"UNKNOWN Privilege Type");
+    throw std::runtime_error("UNKNOWN Status Type");
+  }
+
+  return in;
+}
 
 
 /**
@@ -71,7 +179,7 @@ vishnu::convertToInt(std::string val) {
  */
 
 std::string
-vishnu::cryptPassword(const std::string& salt, const std::string& password) {
+vishnu::cryptPassword(const std::string& salt, const std::string password) {
 
   std::string saltTmp="$6$"+salt+"$";
   std::string encryptedPassword=crypt(password.c_str(),saltTmp.c_str());
@@ -214,7 +322,7 @@ vishnu::boostMoveFile(const std::string& src, const std::string& dest, const std
  * \param value The value to check
  * \return raises an exception on error
  */
-bool vishnu::isNumericalValue(const std::string& value) {
+bool vishnu::isNumericalValue(const std::string value) {
   if(value.size()==0) {
     throw UserException(ERRCODE_INVALID_PARAM, ("Invalid numerical value: The given value is empty"));
   }
@@ -414,7 +522,7 @@ vishnu::checkJobNbNodesAndNbCpuPerNode(const std::string& nbNodesAndCpuPerNode) 
       } else {
         throw UserException(ERRCODE_INVALID_PARAM, ("Invalid NbNodesAndNbCpuPerNode value: "+nbNodesAndCpuPerNode));
       }
-    } catch(UserException& ue) {
+    } catch(UserException ue) {
       throw UserException(ERRCODE_INVALID_PARAM, ("Invalid NbNodesAndNbCpuPerNode value: "+nbNodesAndCpuPerNode));
     }
   }
@@ -488,13 +596,11 @@ void vishnu::createTmpFile(char* fileName, const std::string& file_content) {
   }
 
   if(fchmod(file_descriptor, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH )!=0) {
-    close(file_descriptor); 
-    throw SystemException(ERRCODE_SYSTEM, "vishnu::createTmpFile: reading or writing rights have"
+     throw SystemException(ERRCODE_SYSTEM, "vishnu::createTmpFile: reading or writing rights have"
                                            " not been change on the path. This can lead to an error");
   }
 
   if( write(file_descriptor, file_content.c_str(), file_size) != file_size ) {
-    close(file_descriptor);
     throw SystemException(ERRCODE_SYSTEM, "vishnu::createTmpFile: Cannot write the content int to"
                                           "  new created file");
   }
@@ -514,7 +620,6 @@ void vishnu::createTmpFile(char* fileName) {
   }
 
   if(fchmod(file_descriptor, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH ) !=0) {
-     close(file_descriptor);
      throw SystemException(ERRCODE_SYSTEM, "vishnu::createTmpFile: reading or writing rights have not been"
                                            "  change on the path. This can lead to an error");
   }

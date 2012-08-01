@@ -1,3 +1,39 @@
+/* This file is a part of VISHNU.
+
+* Copyright SysFera SAS (2011) 
+
+* contact@sysfera.com
+
+* This software is a computer program whose purpose is to provide 
+* access to distributed computing resources.
+*
+* This software is governed by the CeCILL  license under French law and
+* abiding by the rules of distribution of free software.  You can  use, 
+* modify and/ or redistribute the software under the terms of the CeCILL
+* license as circulated by CEA, CNRS and INRIA at the following URL
+* "http://www.cecill.info". 
+
+* As a counterpart to the access to the source code and  rights to copy,
+* modify and redistribute granted by the license, users are provided only
+* with a limited warranty  and the software's author,  the holder of the
+* economic rights,  and the successive licensors  have only  limited
+* liability. 
+*
+* In this respect, the user's attention is drawn to the risks associated
+* with loading,  using,  modifying and/or developing or reproducing the
+* software by the user in light of its specific status of free software,
+* that may mean  that it is complicated to manipulate,  and  that  also
+* therefore means  that it is reserved for developers  and  experienced
+* professionals having in-depth computer knowledge. Users are therefore
+* encouraged to load and test the software's suitability as regards their
+* requirements in conditions enabling the security of their systems and/or 
+* data to be ensured and,  more generally, to use and operate it in the 
+* same conditions as regards security. 
+*
+* The fact that you are presently reading this means that you have had
+* knowledge of the CeCILL license and that you accept its terms.
+*/
+
 /**
  * \file utils.cpp
  * \brief this file contains a definition of helper functions used by the command line interface
@@ -20,6 +56,7 @@
 #include "LocalAccountProxy.hpp"
 #include "ConfigurationProxy.hpp"
 #include "Options.hpp"
+#include "utilVishnu.hpp"
 using namespace std;
 
 
@@ -667,6 +704,101 @@ operator<<(std::ostream& os, UMS_Data::ListUsers& lsUsers) {
      userId = (lsUsers.getUsers().get(i))->getUserId();
      privilege = (lsUsers.getUsers().get(i))->getPrivilege();
      status = (lsUsers.getUsers().get(i))->getStatus();
+
+     os << setw(maxFirstnameSize+2) << left << firstname;
+     os << setw(maxLastnameSize+2) << left << lastname;
+     os << setw(maxUserIdSize+2) << left << userId;
+     os << setw(11) << left << privilege ;
+     os << setw(8) << left << status ;
+     os << endl;
+
+  }
+
+
+  return os;
+}
+/**
+ * \brief Helper function to display a user
+ * \param os: The output stream in which the user will be printed
+ * \param user: The user to display
+ * \return The output stream in which the user has been printed
+ */
+
+
+std::ostream&
+operator<<(std::ostream& os, const UMS_Data_Proto::User& user) {
+
+  std::string firstName = user.firstname();
+  std::string lastName = user.lastname();
+  const UMS_Data_Proto::User::PrivilegeType privilege = user.privilege();
+  std::string email = user.email();
+  std::string userId = user.userid();
+  const UMS_Data_Proto::User::StatusType status = user.status();
+
+  std::string privilegeStr = (UMS_Data_Proto::User::ADMIN == privilege?"ADMIN":"USER");
+  std::string statusStr = (UMS_Data_Proto::User::ACTIVE == status?"ACTIVE":"INACTIVE");
+   
+
+
+  os << "============ User for " << userId << "===========" << std::endl;
+  os << setw(25) << right << "FirstName: " << firstName << endl;
+  os << setw(25) << right << "LastName: " << lastName << endl;
+  os << setw(25) << right << "Privilege: "  << privilege << " (" << privilegeStr << ")" << endl;
+  os << setw(25) << right << "Status: "  << status << " (" << statusStr << ")" << endl;
+  os << setw(25) << right << "Mail: "  << email << endl ;
+  os << setw(25) << right << "UserId: " << userId << endl;
+
+  return os;
+}
+
+/**
+ * \brief Helper function to display a list of users
+ * \param os: The output stream in which the list will be printed
+ * \param lsUsers: The list to display
+ * \return The output stream in which the list of users has been printed
+ */
+
+std::ostream&
+operator<<(std::ostream& os, const UMS_Data_Proto::ListUsers& lsUsers) {
+
+  std::string firstname;
+  std::string lastname;
+  UMS_Data_Proto::User::PrivilegeType privilege;
+   UMS_Data_Proto::User::StatusType status;
+  std::string userId;
+  size_t maxFirstnameSize = std::string("Firstname").size();
+  size_t maxLastnameSize = std::string("Lastname").size();
+  size_t maxUserIdSize = std::string("UserId").size();
+
+  for(unsigned int i = 0; i < lsUsers.users_size(); i++) {
+
+     firstname = lsUsers.users(i).firstname();
+     maxFirstnameSize = max(maxFirstnameSize, firstname.size());
+
+     lastname = lsUsers.users(i).lastname();
+     maxLastnameSize = max(maxLastnameSize, lastname.size());
+
+     userId = lsUsers.users(i).userid();
+     maxUserIdSize = max(maxUserIdSize, userId.size());
+  }
+
+  os << setw(maxFirstnameSize+2) << left << "Firstname" << setw(maxLastnameSize+2) << left << "Lastname" << setw(maxUserIdSize+2) << left << "UserId";
+  os << setw(11) << left << "Privilege" << left << "Status";
+  os << endl;
+  setFill(maxFirstnameSize, os);
+  setFill(maxLastnameSize, os);
+  setFill(maxUserIdSize, os);
+  setFill(9, os);
+  setFill(6, os);
+  os << endl;
+
+  for(unsigned int i = 0; i < lsUsers.users_size(); i++) {
+
+     firstname = lsUsers.users(i).firstname();
+     lastname = lsUsers.users(i).lastname();
+     userId = lsUsers.users(i).userid();
+     privilege = lsUsers.users(i).privilege();
+     status = lsUsers.users(i).status();
 
      os << setw(maxFirstnameSize+2) << left << firstname;
      os << setw(maxLastnameSize+2) << left << lastname;

@@ -31,6 +31,7 @@ MYSQLDatabase::process(string request, int transacId){
 
   int res;
   if (request.empty()) {
+    releaseConnection(reqPos);
     throw SystemException(ERRCODE_DBERR, "Empty SQL query");
   }
   // The query must always end with a semicolumn when CLIENT_MULTI_STATEMENTS
@@ -41,7 +42,7 @@ MYSQLDatabase::process(string request, int transacId){
 
   res=mysql_real_query(conn, request.c_str (), request.length());
 
-  if (res == CR_SERVER_GONE_ERROR) {
+  if (res) {
 // try to reinitialise the socket
     if (mysql_real_connect(&(mpool[reqPos].mmysql),
                            mconfig.getDbHost().c_str(),
@@ -74,11 +75,13 @@ MYSQLDatabase::process(string request, int transacId){
       // no result set or error
       if (mysql_field_count(conn) != 0) {
         // some error occurred
+        releaseConnection(reqPos);
         throw SystemException(ERRCODE_DBERR, "P-Query error" + dbErrorMsg(conn));
       }
     }
     // more results? -1 = no, >0 = error, 0 = yes (keep looping)
     if ((res = mysql_next_result(conn)) > 0) {
+      releaseConnection(reqPos);
       throw SystemException(ERRCODE_DBERR, "P-Query error" + dbErrorMsg(conn));
     }
   } while (res == 0);
@@ -162,30 +165,29 @@ MYSQLDatabase::getResult(string request, int transacId) {
   // Execute the SQL query
   if ((res=mysql_real_query(conn, request.c_str (), request.length())) != 0) {
 
-    if (res == CR_SERVER_GONE_ERROR) {
 // try to reinitialise the socket
-      if (mysql_real_connect(&(mpool[reqPos].mmysql),
-                             mconfig.getDbHost().c_str(),
-                             mconfig.getDbUserName().c_str(),
-                             mconfig.getDbUserPassword().c_str(),
-                             mconfig.getDbName().c_str(),
-                             mconfig.getDbPort(),
-                             NULL,
-                             CLIENT_MULTI_STATEMENTS) ==NULL) {
-        throw SystemException(ERRCODE_DBERR, "Cannot reconnect to the DB"
-                              + dbErrorMsg(&(mpool[reqPos].mmysql)));
-      }
-      res=mysql_real_query(conn, request.c_str (), request.length());
-      if (res) {
-        releaseConnection(reqPos);
-        throw SystemException(ERRCODE_DBERR, "S-Query error" + dbErrorMsg(conn));
-      }
+    if (mysql_real_connect(&(mpool[reqPos].mmysql),
+                           mconfig.getDbHost().c_str(),
+                           mconfig.getDbUserName().c_str(),
+                           mconfig.getDbUserPassword().c_str(),
+                           mconfig.getDbName().c_str(),
+                           mconfig.getDbPort(),
+                           NULL,
+                           CLIENT_MULTI_STATEMENTS) ==NULL) {
+      throw SystemException(ERRCODE_DBERR, "Cannot reconnect to the DB"
+                            + dbErrorMsg(&(mpool[reqPos].mmysql)));
+    }
+    res=mysql_real_query(conn, request.c_str (), request.length());
+    if (res) {
+      releaseConnection(reqPos);
+      throw SystemException(ERRCODE_DBERR, "S-Query error" + dbErrorMsg(conn));
     }
   }
 
   // Get the result handle (does not fetch data from the server)
   MYSQL_RES *result = mysql_use_result(conn);
   if (result == 0) {
+    releaseConnection(reqPos);
     throw SystemException(ERRCODE_DBERR, "Cannot get query results" + dbErrorMsg(conn));
   }
   int size = mysql_num_fields(result);
@@ -307,12 +309,10 @@ MYSQLDatabase::cancelTransaction(int transactionID) {
   releaseConnection(transactionID);
 }
 
-
 void
 MYSQLDatabase::flush(int transactionID){
-  bool ret;
   MYSQL* conn = (&(mpool[transactionID].mmysql));
-  ret = mysql_commit(conn);
+  mysql_commit(conn);
 }
 
 int

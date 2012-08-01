@@ -4,7 +4,8 @@ include_directories(client api
   ${EMF_DATA_DIR}
   ${UMS_EMF_DATA_DIR}
   ${VISHNU_EXCEPTION_INCLUDE_DIR}
-  ${UTILVISHNU_SOURCE_DIR})
+  ${UTILVISHNU_SOURCE_DIR}
+  ${PROTOBUF_SOURCE_DIR})
 
 set(client_SRCS client/SessionProxy.cpp
   client/UserProxy.cpp
@@ -13,7 +14,9 @@ set(client_SRCS client/SessionProxy.cpp
   client/ConfigurationProxy.cpp
   client/OptionValueProxy.cpp
   client/utilsClient.cpp
-  client/UtilsProxy.cpp)
+  client/UtilsProxy.cpp
+   ${PROTOBUF_SOURCE_DIR}/user.pb.cc 
+  )
 
 set(cli_SRCS cli/utils
   cli/daemon_cleaner
@@ -33,10 +36,12 @@ target_link_libraries(vishnu-ums-client
   ${DIET_CLIENT_LIBRARIES}
   ${Boost_LIBRARIES}
   emf4cpp-vishnu
-  vishnu-core)
+  vishnu-core
+  ${PROTOBUF_LIBRARIES}
+  )
 
-install(TARGETS vishnu-ums-client DESTINATION ${LIB_INSTALL_DIR})
-install(FILES ${api_HEADERS} DESTINATION ${INCLUDE_INSTALL_DIR})
+install(TARGETS vishnu-ums-client DESTINATION lib)
+install(FILES ${api_HEADERS} DESTINATION include)
 
 ## client CLI
 add_subdirectory(cli)
@@ -44,12 +49,13 @@ add_subdirectory(cli)
 if(NOT CLIENT_ONLY)
   include_directories(
   ${CONFIG_SOURCE_DIR}
-  ${DATABASE_INCLUDE_DIR}
+  ${POSTGRESQL_INCLUDE_DIR}
   ${DATA_BASE_INCLUDE_DIR}
   ${UMS_SERVER_SOURCE_DIR}
   ${Boost_INCLUDE_DIRS}
-  ${REGISTRY_SOURCE_DIR})
-
+  ${REGISTRY_SOURCE_DIR}
+  ${PROTOBUF_SOURCE_DIR})
+  
   set(sed_SRCS sed/umssed.cpp
     sed/ServerUMS.cpp
     sed/internalApi.cpp
@@ -62,20 +68,24 @@ if(NOT CLIENT_ONLY)
     server/LocalAccountServer.cpp
     server/ConfigurationServer.cpp
     server/CommandServer.cpp
-    server/ListUsersServer.cpp)
+    server/ListUsersServer.cpp
+    ${PROTOBUF_SOURCE_DIR}/user.pb.cc)
+
 
   add_library(vishnu-ums-server ${server_SRCS})
   set_target_properties(vishnu-ums-server PROPERTIES VERSION ${VISHNU_VERSION})
-  install(TARGETS vishnu-ums-server DESTINATION ${LIB_INSTALL_DIR})
-
-  target_link_libraries(vishnu-ums-server vishnu-core vishnu-core-server)
-  
+  install(TARGETS vishnu-ums-server DESTINATION lib)
   add_executable(umssed ${sed_SRCS})
   target_link_libraries(umssed ${DIET_SERVER_LIBRARIES}
+    ${Boost_LIBRARIES}
+    ${DATABASE_LIBS}
+    vishnu-core
+    vishnu-core-server
     vishnu-ums-server
     emf4cpp-vishnu
-    crypt)
+    crypt
+    ${PROTOBUF_LIBRARY})
 
-  install(TARGETS umssed DESTINATION ${SBIN_INSTALL_DIR})
+  install(TARGETS umssed DESTINATION sbin)
 endif()
 

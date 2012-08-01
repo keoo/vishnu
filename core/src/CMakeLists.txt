@@ -3,7 +3,8 @@ include_directories(${Boost_INCLUDE_DIRS}
   ../deps/emf4cpp ${UMS_SERVER_SOURCE_DIR} ${TMS_SERVER_SOURCE_DIR}
   ${IMS_SERVER_SOURCE_DIR} ${FMS_SERVER_SOURCE_DIR}
   ${PROJECT_BINARY_DIR}
-  ${DATABASE_INCLUDE_DIR})
+  ${POSTGRESQL_INCLUDE_DIR}
+  ${PROTOBUF_SOURCE_DIR})
 
 #################### config ###################################################
 set(config_SRCS config/CommonParser.cpp
@@ -35,7 +36,8 @@ set(utils_SRCS utils/utilVishnu.cpp
   utils/Options.cpp
   utils/sessionUtils.cpp
   utils/CLICmd.cpp
-  utils/cliUtil.cpp)
+  utils/cliUtil.cpp
+  ${PROTOBUF_SOURCE_DIR}/user.pb.cc)
 
 #################### register #################################################
 set(registry_SRCS registry/MapperRegistry.cpp
@@ -282,10 +284,9 @@ add_library(vishnu-core ${config_SRCS}
   ${IMS_Data_SRCS}
   ${FMS_Data_SRCS}
 )
-install(TARGETS vishnu-core DESTINATION ${LIB_INSTALL_DIR})
+install(TARGETS vishnu-core DESTINATION lib)
 set_target_properties(vishnu-core PROPERTIES VERSION ${VISHNU_VERSION})
-install(FILES ${exception_HEADERS} DESTINATION ${INCLUDE_INSTALL_DIR})
-target_link_libraries(vishnu-core ${Boost_LIBRARIES})
+install(FILES ${exception_HEADERS} DESTINATION include)
 
 if(NOT CLIENT_ONLY)
   set(database_SRCS 
@@ -298,19 +299,19 @@ if(NOT CLIENT_ONLY)
   if(MYSQL_FOUND AND ENABLE_MYSQL)
     set(database_SRCS ${database_SRCS} database/MYSQLDatabase.cpp)
     include_directories(${MYSQL_INCLUDE_DIR})
-    set(DB_LIBS ${DATABASE_LIBS})
+    set(DB_LIBS ${MYSQL_LIB})
   endif()
    
   if(POSTGRESQL_FOUND AND ENABLE_POSTGRESQL)
     set(database_SRCS ${database_SRCS} database/POSTGREDatabase.cpp)
-    include_directories(${DATABASE_INCLUDE_DIR})
-    set(DB_LIBS ${DATABASE_LIBS})
+    include_directories(${POSTGRESQL_INCLUDE_DIR})
+    set(DB_LIBS ${POSTGRESQL_LIB})
   endif()
 
-  add_library(vishnu-core-server ${database_SRCS} ${utils_server_SRCS})
+  add_library(vishnu-core-server ${database_SRCS} ${utils_server_SRCS} ${PROTOBUF_LIBRARY})
   set_target_properties(vishnu-core-server PROPERTIES VERSION ${VISHNU_VERSION})
-  install(TARGETS vishnu-core-server DESTINATION ${LIB_INSTALL_DIR})
+  install(TARGETS vishnu-core-server DESTINATION lib)
   target_link_libraries(vishnu-core-server ${DB_LIBS})
 
-  install(PROGRAMS utils/sendmail.py DESTINATION ${SBIN_INSTALL_DIR})
+  install(FILES utils/sendmail.py DESTINATION sbin)
 endif()

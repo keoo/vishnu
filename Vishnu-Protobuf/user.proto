@@ -1,0 +1,30 @@
+// See README.txt for information and build instructions.
+
+package UMS_Data_Proto;
+
+
+message User {
+  optional string userId = 1;// Unique ID number for this user.
+  optional string password = 2;
+  optional string firstname = 3;
+  optional string lastname = 4;
+
+  enum PrivilegeType {
+    USER = 1;
+    ADMIN = 2;
+  }
+
+enum StatusType {
+    INACTIVE = 1;
+    ACTIVE = 2;
+  }
+
+  optional  PrivilegeType privilege = 5 [default = USER];
+  optional  StatusType status = 6 [default = ACTIVE];
+  optional string email = 7;
+}
+
+message ListUsers {
+repeated User users = 1 ;
+}
+

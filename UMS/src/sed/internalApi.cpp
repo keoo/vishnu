@@ -1,3 +1,39 @@
+/* This file is a part of VISHNU.
+
+* Copyright SysFera SAS (2011) 
+
+* contact@sysfera.com
+
+* This software is a computer program whose purpose is to provide 
+* access to distributed computing resources.
+*
+* This software is governed by the CeCILL  license under French law and
+* abiding by the rules of distribution of free software.  You can  use, 
+* modify and/ or redistribute the software under the terms of the CeCILL
+* license as circulated by CEA, CNRS and INRIA at the following URL
+* "http://www.cecill.info". 
+
+* As a counterpart to the access to the source code and  rights to copy,
+* modify and redistribute granted by the license, users are provided only
+* with a limited warranty  and the software's author,  the holder of the
+* economic rights,  and the successive licensors  have only  limited
+* liability. 
+*
+* In this respect, the user's attention is drawn to the risks associated
+* with loading,  using,  modifying and/or developing or reproducing the
+* software by the user in light of its specific status of free software,
+* that may mean  that it is complicated to manipulate,  and  that  also
+* therefore means  that it is reserved for developers  and  experienced
+* professionals having in-depth computer knowledge. Users are therefore
+* encouraged to load and test the software's suitability as regards their
+* requirements in conditions enabling the security of their systems and/or 
+* data to be ensured and,  more generally, to use and operate it in the 
+* same conditions as regards security. 
+*
+* The fact that you are presently reading this means that you have had
+* knowledge of the CeCILL license and that you accept its terms.
+*/
+
 /**
 * \file UMS/src/sed/internalApi.cpp
 * \brief This file implements the internal api of UMS
@@ -234,6 +270,64 @@ solveUserCreate(diet_profile_t* pb) {
   return 0;
 }
 
+
+int
+solveUserCreate2(diet_profile_t* pb) {
+  char *sessionKey = NULL;
+  char *userSerialized = NULL;
+  std::string empty("");
+  std::string errorInfo;
+  int mapperkey;
+  std::string cmd;
+  std::string finishError ="";
+
+  //IN Parameters
+  diet_string_get(diet_parameter(pb,0), &sessionKey, NULL);
+  diet_string_get(diet_parameter(pb,1), &userSerialized, NULL);
+
+  SessionServer sessionServer = SessionServer(std::string(sessionKey));
+  UserServer userServer = UserServer(sessionServer);
+
+  UMS_Data_Proto::User user;
+
+  try {
+    //MAPPER CREATION
+    Mapper *mapper = MapperRegistry::getInstance()->getMapper(UMSMAPPERNAME);
+    mapperkey = mapper->code("vishnu_add_user");
+    mapper->code(std::string(userSerialized), mapperkey);
+    cmd = mapper->finalize(mapperkey);
+
+    //To parse the object serialized
+    user.ParseFromString(std::string(userSerialized));
+
+    userServer.init();
+    userServer.add(user,
+                   ServerUMS::getInstance()->getVishnuId(),
+                   ServerUMS::getInstance()->getSendmailScriptPath());
+
+    std::string userSerializedUpdate = user.SerializeAsString();    
+    //OUT Parameter
+    diet_string_set(diet_parameter(pb,2), strdup(userSerializedUpdate.c_str()), DIET_VOLATILE);
+    diet_string_set(diet_parameter(pb,3), strdup(empty.c_str()), DIET_VOLATILE);
+    //To save the connection
+    sessionServer.finish(cmd, UMS, vishnu::CMDSUCCESS, user.userid());
+
+  } catch (VishnuException& e) {
+      try {
+        sessionServer.finish(cmd, UMS, vishnu::CMDFAILED);
+      } catch (VishnuException& fe) {
+        finishError =  fe.what();
+        finishError +="\n";
+      }
+      e.appendMsgComp(finishError);
+      errorInfo =  e.buildExceptionString();
+      //OUT Parameter
+      diet_string_set(diet_parameter(pb,2), strdup(empty.c_str()), DIET_VOLATILE);
+      diet_string_set(diet_parameter(pb,3), strdup(errorInfo.c_str()), DIET_VOLATILE);
+  }
+  return 0;
+}
+
 /**
 * \brief Function to solve the service solveUserUpdate
 * \fn    int solveUserUpdate(diet_profile_t* pb)
@@ -295,6 +389,66 @@ solveUserUpdate(diet_profile_t* pb) {
   delete user;
   return 0;
 }
+
+
+/**
+* \brief Function to solve the service solveUserUpdate
+* \fn    int solveUserUpdate(diet_profile_t* pb)
+* \param pb is a structure which corresponds to the descriptor of a profile
+* \return raises an exception on error
+*/
+int
+solveUserUpdate2(diet_profile_t* pb) {
+  char *sessionKey = NULL;
+  char *userSerialized = NULL;
+  std::string empty("");
+  std::string errorInfo;
+  int mapperkey;
+  std::string cmd;
+  std::string finishError ="";
+
+
+  //IN Parameters
+  diet_string_get(diet_parameter(pb,0), &sessionKey, NULL);
+  diet_string_get(diet_parameter(pb,1), &userSerialized, NULL);
+
+  SessionServer sessionServer = SessionServer(std::string(sessionKey));
+  UserServer userServer = UserServer(sessionServer);
+
+  UMS_Data_Proto::User user;
+
+  try {
+     //MAPPER CREATION
+    Mapper *mapper = MapperRegistry::getInstance()->getMapper(UMSMAPPERNAME);
+    mapperkey = mapper->code("vishnu_update_user");
+    mapper->code(std::string(userSerialized), mapperkey);
+    cmd = mapper->finalize(mapperkey);
+
+    //To parse the object serialized
+    user.ParseFromString(std::string(userSerialized));
+
+    userServer.init();
+    userServer.update(user);
+
+    //OUT Parameter
+    diet_string_set(diet_parameter(pb,2), strdup(empty.c_str()), DIET_VOLATILE);
+    //To save the connection
+    sessionServer.finish(cmd, UMS, vishnu::CMDSUCCESS);
+
+  } catch (VishnuException& e) {
+      try {
+        sessionServer.finish(cmd, UMS, vishnu::CMDFAILED);
+      } catch (VishnuException& fe) {
+        finishError =  fe.what();
+        finishError +="\n";
+      }
+      e.appendMsgComp(finishError);
+      errorInfo =  e.buildExceptionString();
+      //OUT Parameter
+      diet_string_set(diet_parameter(pb,2), strdup(errorInfo.c_str()), DIET_VOLATILE);
+  }
+  return 0;
+}
 /**
 * \brief Function to solve the service solveUserDelete
 * \fn    int solveUserDelete(diet_profile_t* pb)
@@ -318,8 +472,8 @@ solveUserDelete(diet_profile_t* pb) {
   SessionServer sessionServer = SessionServer(std::string(sessionKey));
   UserServer userServer = UserServer(sessionServer);
 
-  UMS_Data::User user;
-  user.setUserId(userId);
+  UMS_Data_Proto::User user;
+  user.set_userid(userId);
 
   try {
     //MAPPER CREATION
@@ -1137,7 +1291,7 @@ solveListUsers(diet_profile_t* pb) {
   SessionServer sessionServer  = SessionServer(std::string(sessionKey));
   ListUsersServer queryUsers(std::string(option), sessionServer);
 
-  UMS_Data::ListUsers_ptr listUsers = NULL;
+  UMS_Data_Proto::ListUsers listUsers;
 
   try {
      //MAPPER CREATION
@@ -1148,8 +1302,21 @@ solveListUsers(diet_profile_t* pb) {
 
     listUsers  = queryUsers.list();
 
-    ::ecorecpp::serializer::serializer _ser;
-    listUsersSerialized =  _ser.serialize_str(listUsers);
+    listUsersSerialized = listUsers.SerializeAsString();
+    //char* listUsersSerializedC = new char[listUsersSerialized.size()];
+//listUsersSerialized.copy(listUsersSerializedC,listUsers.ByteSize());
+ 
+
+/*for (; it!=listUsersSerialized.end() ; ++i){
+      listUsersSerializedC[i++]= *it;
+    }
+*/
+
+//listUsers->SerializeToArray(listUsersSerializedC, listUsers->ByteSize());
+    //std::cout << "parsed list in internal api " <<listUsersSerializedC<< "\n";
+    //std::cout << "parsed list in internal api " << listUsersSerialized.size()  << "\n";
+    //std::cout << "parsed list in internal api " << strlen(listUsersSerialized.c_str())  << "\n"; 
+    //std::cout << "parsed list in internal api " << listUsersSerializedC  << "\n"; 
 
     //OUT Parameters
     diet_string_set(diet_parameter(pb,2), strdup(listUsersSerialized.c_str()), DIET_VOLATILE);
@@ -1157,19 +1324,22 @@ solveListUsers(diet_profile_t* pb) {
     //To save the connection
     sessionServer.finish(cmd, UMS, vishnu::CMDSUCCESS);
   } catch (VishnuException& e) {
-      try {
-          sessionServer.finish(cmd, UMS, vishnu::CMDFAILED);
-      } catch (VishnuException& fe) {
-          finishError =  fe.what();
-          finishError +="\n";
-      }
-      e.appendMsgComp(finishError);
-      errorInfo =  e.buildExceptionString();
-      //OUT Parameters
-      diet_string_set(diet_parameter(pb,2), strdup(listUsersSerialized.c_str()), DIET_VOLATILE);
-      diet_string_set(diet_parameter(pb,3), strdup(errorInfo.c_str()), DIET_VOLATILE);
+    
+    try {
+      sessionServer.finish(cmd, UMS, vishnu::CMDFAILED);
+    } catch (VishnuException& fe) {
+      finishError =  fe.what();
+      finishError +="\n";
+    }
+    e.appendMsgComp(finishError);
+    errorInfo =  e.buildExceptionString();
+    //OUT Parameters
+    diet_string_set(diet_parameter(pb,2), strdup(listUsersSerialized.c_str()), DIET_VOLATILE);
+    diet_string_set(diet_parameter(pb,3), strdup(errorInfo.c_str()), DIET_VOLATILE);
   }
-  delete listUsers;
+
+  //delete listUsers;
+
   return 0;
 
 }

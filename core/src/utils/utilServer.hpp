@@ -48,7 +48,8 @@ namespace vishnu {
     MACHINE = 0,/*!< For the machines*/
     USER = 1, /*!< For The users */
     JOB = 2, /*!< For the jobs */
-    FILETRANSFERT = 3  /*!< For the file tranfers*/
+    FILETRANSFERT = 3,  /*!< For the file tranfers*/
+    AUTH = 4  /*!< For the authentication system*/
   } IdType;
   /**
    * \enum CmdStatus
@@ -203,13 +204,13 @@ namespace vishnu {
                     std::string site ="");
 
   /**
-   * \brief Function to get information from the table vishnu
+   * \brief Function to get a specific vishnu counter
    * \param counterName the name of the counter
-   * \param vishnuid the id of the vishnu configuration
+   * \param vishnuId the id of the vishnu configuration
    * \return The int counter value
    */
   int
-  ninja(std::string counterName, std::string vishnuId);
+  getVishnuCounter(std::string vishnuId);
 
   /**
    * \brief Function to get information from the table vishnu
@@ -222,12 +223,10 @@ namespace vishnu {
   getAttrVishnu(std::string attrname, std::string vishnuid, int transacId = -1);
 
   /**
-   * \brief Function to increment a counter of the table vishnu
-   * \fn int  incrementCpt(std::string cptName, int cpt)
+   * \brief Function to increment a counter of the table vishnu.
    * \param cptName the name of the counter to increment
    * \param cpt     the current value of the counter
    * \param transacId the id of the transaction if one is used. -1 to ignore
-   * \return raises an exception
    */
   void
   incrementCpt(std::string cptName, int cpt, int transacId = -1);
@@ -243,7 +242,6 @@ namespace vishnu {
   */
   std::string
   getObjectId(int vishnuId,
-              std::string counterName,
               std::string formatName,
               IdType type,
               std::string stringforgeneration);
