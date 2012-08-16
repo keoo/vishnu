@@ -61,19 +61,27 @@ SOCIDatabase::process(const string & request, const int transacId)
 
 	// To separate que request in case of multiple statements
 	vector<string> requests=split(request,';');
-	try {
-		for(vector<string>::const_iterator it=requests.begin();it!=requests.end();++it) {
-			if(! it->empty()) {
-			(pconn->once)<<(*it);
+
+	for(vector<string>::const_iterator it=requests.begin();it!=requests.end();++it) {
+		if(! it->empty()) {
+			try {
+					(pconn->once)<<(*it);
+			}
+			catch (exception const &e) {
+
+				try {
+					pconn->reconnect();
+					(pconn->once)<<(*it);
+				}
+				catch (exception const & e2) {
+					if (reqPos != -1) {
+						releaseConnection(reqPos);
+					}
+					throw SystemException(ERRCODE_DBERR, string("Cannot process request [")
+							+ pconn->get_last_query() +"] \n" + e2.what());
+				}
 			}
 		}
-	}
-	catch (exception const &e) {
-		if (reqPos != -1) {
-				releaseConnection(reqPos);
-		}
-		throw SystemException(ERRCODE_DBERR,
-				string("Cannot process request \n")+ pconn->get_last_query() + e.what());
 	}
 
 	if (reqPos != -1) {
@@ -252,12 +260,17 @@ SOCIDatabase::getResult(string request, const int transacId)
 		resultsStr = rowsetToString(results, attributesNames);
 	}
 	catch (exception const &e) {
-		if(reqPos != -1) {
-				releaseConnection(reqPos);
+		try {
+			rowset<row> results = pconn->prepare << request;
+			resultsStr = rowsetToString(results, attributesNames);
 		}
-
-		throw SystemException(ERRCODE_DBERR,
-				string("Cannot get query results ["+request+"] \n") + e.what());
+		catch (exception const & e2) {
+			if(reqPos != -1) {
+					releaseConnection(reqPos);
+			}
+			throw SystemException(ERRCODE_DBERR,
+					string("Cannot get query results ["+request+"] \n") + e.what());
+		}
 	}
 
 	if(reqPos != -1) {
