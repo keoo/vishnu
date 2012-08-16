@@ -30,7 +30,7 @@ std::vector<std::string> split(const std::string &s, char delim);
  * \brief convert standard time to string YYYY-MM-DD HH-MM-SS
  *  note : maybe put it in Utils
  */
-std::string convertTmToString(std::tm time);
+std::string convertTmToString(const std::tm & time);
 
 /**
  * \class SOCIDatabase
@@ -46,7 +46,7 @@ public :
    * \brief NB : requests like create, drop and alter table put the transcation into auto-commit mode
    */
   int
-  process(std::string request, int transacId = -1);
+  process(const std::string & request, const int transacId = -1);
   /**
   * \brief To make a connection to the database
   * \fn int connect()
@@ -67,7 +67,7 @@ public :
    * \param dbConfig  the configuration of the database client
    */
 
-  SOCIDatabase(DbConfiguration dbConfig);
+  SOCIDatabase(const DbConfiguration & dbConfig);
   /**
    * \fn ~SOCIDatabase()
    * \brief Destructor, raises an exception on error
@@ -81,7 +81,7 @@ public :
   * \return An object which encapsulates the database results
   */
   DatabaseResult*
-  getResult(std::string request, int transacId = -1);
+  getResult(std::string request, const int transacId = -1);
   /**
    * \brief To get the type of database
    * \return An enum identifying the type of database
@@ -99,19 +99,19 @@ public :
    * \param transactionID: The ID of the transaction
    */
   void
-  endTransaction(int transactionID);
+  endTransaction(const int transactionID);
   /**
    * \brief Cancel a transaction
    * \param transactionID: The ID of the transaction
    */
   void
-  cancelTransaction(int transactionID);
+  cancelTransaction(const int transactionID);
   /**
    * \brief To commit a transaction
   * \param transactionID: The ID of the transaction
   */
   void
-  flush(int transactionID);
+  flush(const int transactionID);
   /**
    * \brief To get a unique id
    * \param table: The table to use to generate the id
@@ -121,7 +121,8 @@ public :
    * \return A new integer never returned by this function
    */
   int
-  generateId(std::string table, std::string fields, std::string val, int tid);
+  generateId(const std::string & table, const std::string & fields,
+		  const std::string & val, const int tid);
   /**
    * \brief To get a single session to the DB
    * \param (optional) transactionId : the id of the transaction if one is used
@@ -194,7 +195,7 @@ private :
   /*
    * \brief convert SOCI rowset of row into a vector of vector of string
    * \param rs : the query result rowset
-   * \param attributeNames : the names of the different columns are stocked here
+   * \param[out] attributeNames : the names of the different columns are stocked here
    * \return attributeNames by reference
    */
   std::vector< std::vector<std::string> >
