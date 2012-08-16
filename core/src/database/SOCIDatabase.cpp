@@ -26,7 +26,7 @@ const int CONN_TIMEOUT = 3000; // in millisecond
  * the connexion is released.
  */
 int
-SOCIDatabase::process(string request, int transacId)
+SOCIDatabase::process(const string & request, const int transacId)
 {
 	if (!is_connected) {
 		throw SystemException(ERRCODE_DBCONN,
@@ -149,7 +149,7 @@ SOCIDatabase::connect()
  * \fn SOCIDatabase(DbConfiguration dbConfig)
  * \brief Constructor, raises an exception on error
  */
-SOCIDatabase::SOCIDatabase(DbConfiguration dbConfig) :
+SOCIDatabase::SOCIDatabase(const DbConfiguration & dbConfig) :
 	mconfig(dbConfig), mdbtype(dbConfig.getDbType()),
 	mpool(new connection_pool(mconfig.getDbPoolSize()))
 {
@@ -207,7 +207,7 @@ SOCIDatabase::disconnect()
  * \return The result of the latest request
  */
 DatabaseResult*
-SOCIDatabase::getResult(string request, int transacId)
+SOCIDatabase::getResult(string request, const int transacId)
 {
 	if (!is_connected) {
 		throw SystemException(ERRCODE_DBCONN,
@@ -395,7 +395,7 @@ void SOCIDatabase::endTransaction(int transactionID)
 }
 
 void
-SOCIDatabase::cancelTransaction(int transactionID)
+SOCIDatabase::cancelTransaction(const int transactionID)
 {
 
 	if (!is_connected) {
@@ -424,7 +424,7 @@ SOCIDatabase::cancelTransaction(int transactionID)
 }
 
 void
-SOCIDatabase::flush(int transactionID)
+SOCIDatabase::flush(const int transactionID)
 {
 
 	if (!is_connected)	{
@@ -447,7 +447,8 @@ SOCIDatabase::flush(int transactionID)
 }
 
 int
-SOCIDatabase::generateId(string table, string fields, string val, int tid)
+SOCIDatabase::generateId(const string & table, const string & fields,
+		const string & val, const int tid)
 {
 	if (!is_connected) {
 		throw SystemException(ERRCODE_DBCONN,
@@ -574,7 +575,7 @@ int SOCIDatabase::releaseSingleSession(SOCISession & sess)
  * \note :maybe put it in Utils
  */
 std::string
-convertTmToString(std::tm time)
+convertTmToString(const std::tm & time)
 {
 	string timeStr="";
 	// tm_year : years since 1900
