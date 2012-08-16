@@ -213,10 +213,12 @@ BOOST_AUTO_TEST_CASE( session_exchange_test )
 		// insert null string in integer
 		string badStr="";
 		BOOST_TEST_MESSAGE("--- echange input data with bad type conversion ---");
+		session.begin();
 		BOOST_CHECK_THROW(session.execute(request).use(badStr).use(name2),VishnuException);
 		// insert non numeric string in integer
 		badStr="helloWorld";
 		BOOST_CHECK_THROW(session.execute(request).use(badStr).use(name2),VishnuException);
+		session.rollback();
 
 		// exchanging output data
 		int reqid = -1;
@@ -306,11 +308,11 @@ BOOST_AUTO_TEST_CASE( type_conversion_init )
 		// executing simple request
 		BOOST_TEST_MESSAGE("--- type conversion test ---");
 		std::string sqlCreate="CREATE TABLE typeconversion ("
-				"integer integer, double double precision,"
-				"varchar varchar, timestamp timestamp without time zone)";
+				"minteger integer, mdouble double precision,"
+				"mvarchar varchar(255), mtimestamp timestamp)";
 		BOOST_CHECK_NO_THROW(session.execute("drop table if exists typeconversion"));
 		BOOST_CHECK_NO_THROW(session.execute(sqlCreate));
-		BOOST_CHECK_NO_THROW(session.execute("insert into typeconversion default values"));
+		BOOST_CHECK_NO_THROW(session.execute("insert into typeconversion(minteger) values (NULL)"));
 
 
 		BOOST_CHECK_NO_THROW(myDatabase->releaseSingleSession(session));
@@ -333,8 +335,8 @@ BOOST_AUTO_TEST_CASE( type_conversion_integer )
 
 		// executing simple request
 		BOOST_TEST_MESSAGE("--- type conversion : integer ---");
-		std::string sqlUpdate="update typeconversion set integer=7";
-		std::string sqlSelect="select integer from typeconversion";
+		std::string sqlUpdate="update typeconversion set minteger=7";
+		std::string sqlSelect="select minteger from typeconversion";
 		int expected = 7;
 		int read;
 		BOOST_CHECK_NO_THROW(session.execute(sqlUpdate));
@@ -363,8 +365,8 @@ BOOST_AUTO_TEST_CASE( type_conversion_double )
 
 		// executing simple request
 		BOOST_TEST_MESSAGE("--- type conversion : double precision ---");
-		std::string sqlUpdate="update typeconversion set double=3.14";
-		std::string sqlSelect="select double from typeconversion";
+		std::string sqlUpdate="update typeconversion set mdouble=3.14";
+		std::string sqlSelect="select mdouble from typeconversion";
 		double expected = 3.14;
 		double read;
 		BOOST_CHECK_NO_THROW(session.execute(sqlUpdate));
@@ -392,8 +394,8 @@ BOOST_AUTO_TEST_CASE( type_conversion_varchar )
 
 		// executing simple request
 		BOOST_TEST_MESSAGE("--- type conversion : varchar ---");
-		std::string sqlUpdate="update typeconversion set varchar='toto'";
-		std::string sqlSelect="select varchar from typeconversion";
+		std::string sqlUpdate="update typeconversion set mvarchar='toto'";
+		std::string sqlSelect="select mvarchar from typeconversion";
 		std::string expected = "toto";
 		std::string read;
 		BOOST_CHECK_NO_THROW(session.execute(sqlUpdate));
@@ -421,8 +423,8 @@ BOOST_AUTO_TEST_CASE( type_conversion_time )
 
 		// executing simple request
 		BOOST_TEST_MESSAGE("--- type conversion : timestamp ---");
-		std::string sqlUpdate="update typeconversion set timestamp=:param";
-		std::string sqlSelect="select timestamp from typeconversion";
+		std::string sqlUpdate="update typeconversion set mtimestamp=:param";
+		std::string sqlSelect="select mtimestamp from typeconversion";
 		std::string strExpected = "2012-07-31 22:54:28";
 		std::tm expected;
 		expected.tm_year=2012-1900;
