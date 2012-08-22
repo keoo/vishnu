@@ -17,7 +17,7 @@ using namespace soci;
  * \brief timeout for gettig connection in getConnection
  */
 const int CONN_TIMEOUT = 3000; // in millisecond
-
+const int LOCK_TIMEOUT = 3; // in seconds
 
 /**
  * \brief Function to process the request in the database
@@ -68,20 +68,13 @@ SOCIDatabase::process(const string & request, const int transacId)
 					(pconn->once)<<(*it);
 			}
 			catch (exception const &e) {
-
-				try {
-					pconn->reconnect();
-					(pconn->once)<<(*it);
+				if (reqPos != -1) {
+					releaseConnection(reqPos);
 				}
-				catch (exception const & e2) {
-					if (reqPos != -1) {
-						releaseConnection(reqPos);
-					}
-					throw SystemException(ERRCODE_DBERR, string("Cannot process request [")
-							+ pconn->get_last_query() +"] \n" + e2.what());
+				throw SystemException(ERRCODE_DBERR, string("Cannot process request [")
+						+ pconn->get_last_query() +"] \n" + e.what());
 				}
 			}
-		}
 	}
 
 	if (reqPos != -1) {
@@ -133,6 +126,9 @@ SOCIDatabase::connect()
 		ostringstream oss;
 		oss << mconfig.getDbPort();
 		connectString += " port=" + oss.str();
+	}
+	if (backend == "sqlite3") {
+		connectString += " timeout="+convertToString(LOCK_TIMEOUT);
 	}
 
 
@@ -260,17 +256,11 @@ SOCIDatabase::getResult(string request, const int transacId)
 		resultsStr = rowsetToString(results, attributesNames);
 	}
 	catch (exception const &e) {
-		try {
-			rowset<row> results = pconn->prepare << request;
-			resultsStr = rowsetToString(results, attributesNames);
+		if(reqPos != -1) {
+				releaseConnection(reqPos);
 		}
-		catch (exception const & e2) {
-			if(reqPos != -1) {
-					releaseConnection(reqPos);
-			}
-			throw SystemException(ERRCODE_DBERR,
-					string("Cannot get query results ["+request+"] \n") + e.what());
-		}
+		throw SystemException(ERRCODE_DBERR,
+				string("Cannot get query results ["+request+"] \n") + e.what());
 	}
 
 	if(reqPos != -1) {
