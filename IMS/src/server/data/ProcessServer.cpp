@@ -37,7 +37,7 @@ ProcessServer::list(){
   if (mop->getMachineId().compare("") != 0){
     string machine = "SELECT machineid from machine where machineid='"+mop->getMachineId()+"'";
     SOCISession session = mdatabase->getSingleSession();
-    session<<machine;
+    session.execute(machine);
     bool got_data=session.got_data();
     mdatabase->releaseSingleSession(session);
     if(! got_data) {

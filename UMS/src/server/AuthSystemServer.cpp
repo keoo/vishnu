@@ -280,7 +280,7 @@ AuthSystemServer::getAttribut(std::string condition, std::string attrname) {
 	std::string ret;
 	std::string sqlCommand("SELECT "+attrname+" FROM authsystem "+condition);
 	SOCISession session = mdatabaseVishnu->getSingleSession();
-	(session<<sqlCommand).into(ret);
+	session.execute(sqlCommand).into(ret);
 	mdatabaseVishnu->releaseSingleSession(session);
 	return ret;
 }

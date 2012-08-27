@@ -61,7 +61,7 @@ MonitorUMS::init(int vishnuId,
     mdatabaseVishnu->connect();
     /* Checking of vishnuid on the database */
     SOCISession session=mdatabaseVishnu->getSingleSession();
-    session<<sqlCommand;
+    session.execute(sqlCommand);
     bool got_data =session.got_data();
     mdatabaseVishnu->releaseSingleSession(session);
     if(!got_data){
