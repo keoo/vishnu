@@ -10,7 +10,7 @@
 
 #include <soci/soci.h>
 
-
+class SOCISession;
 /**
  * \class temporary_type
  * \brief temporary type used when executing SQL command by SOCISession.
@@ -29,8 +29,10 @@ public:
 
 	/**
 	 * \brief constructor from an existing session
+	 * \param session : the session where the command is executing
 	 */
-	SOCITemporaryType(soci::session & sess);
+	explicit
+	SOCITemporaryType(SOCISession & session);
 	/**
 	 * \brief copy constructor
 	 */
@@ -192,7 +194,7 @@ public:
 private:
 	int nbUses;
 	int nbIntos;
+	SOCISession & msession;
+
 };
-
-
 #endif //_SOCITEMPORARYTYPES_H_
