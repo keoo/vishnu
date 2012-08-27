@@ -125,7 +125,7 @@ ThresholdServer::checkExist(IMS_Data::Threshold_ptr tree) {
   try {
     // Executing the request and getting the results
   SOCISession session = mdatabase->getSingleSession();
-  session<<req;
+  session.execute(req);
   bool got_data=session.got_data();
   mdatabase->releaseSingleSession(session);
   return got_data; 
