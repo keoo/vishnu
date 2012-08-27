@@ -6,7 +6,6 @@
  */
 
 #include "SOCITemporaryType.hpp"
-#include "SOCISession.hpp"
 #include "SystemException.hpp"
 
 using namespace std;
@@ -45,8 +44,12 @@ SOCITemporaryType::~SOCITemporaryType()
 		once,soci::into(tmp);
 	}
 	TRYCATCH((once.~once_temp_type()),"Failed to execute query \n")
-	if(msession.isAutoCommit()) {
+	if( msession.isAutoCommit() ) {
 		msession.commit();
+	}
+	if( msession.isSingleExecution() ) {
+		//TODO : relâcher la session
+		msession.release();
 	}
 }
 

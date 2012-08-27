@@ -1,5 +1,6 @@
 #include "SOCIStatement.hpp"
 #include "SOCISession.hpp"
+
 using namespace std;
 using namespace soci;
 

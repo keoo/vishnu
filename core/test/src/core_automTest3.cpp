@@ -122,6 +122,7 @@ BOOST_AUTO_TEST_CASE( getting_results_without_transaction )
 	BOOST_CHECK_THROW(myDatabase->getResult("this is bad syntax"),VishnuException);
 	// SQL exception
 	BOOST_TEST_MESSAGE("--- get result of SQL error ---");
+	BOOST_CHECK_THROW(myDatabase->getResult("select * from unknowtable"),VishnuException);
 	BOOST_CHECK(myDatabase->getResult("select * from paco")->getNbTuples()==6);
 	// disconnect from database
 	BOOST_CHECK(myDatabase->disconnect()==0);
@@ -149,6 +150,56 @@ BOOST_AUTO_TEST_CASE( getting_results_with_transaction )
 	// disconnect from database
 	BOOST_CHECK(myDatabase->disconnect()==0);
 }
+
+BOOST_AUTO_TEST_CASE( execute_without_transaction )
+{
+	BOOST_REQUIRE(myDatabase != NULL);
+	// getting result with disconnected database
+	BOOST_TEST_MESSAGE("--- execute with disconnected database ---");
+	BOOST_CHECK_THROW(myDatabase->execute("select * from paco"),VishnuException);
+	// connection to database
+	BOOST_REQUIRE(myDatabase->connect()==0);
+	BOOST_TEST_MESSAGE("--- execute simple request");
+	int count=0;
+	BOOST_CHECK_NO_THROW(myDatabase->execute("select count(*) from paco").into(count));
+	BOOST_CHECK(count>0);
+	// empty request
+	BOOST_TEST_MESSAGE("--- execute empty request");
+	BOOST_CHECK_THROW(myDatabase->execute(""),VishnuException);
+	// bad SQL Syntax
+	BOOST_TEST_MESSAGE("--- execute bad SQL syntax");
+	BOOST_CHECK_THROW(myDatabase->execute("this is bad syntax"),VishnuException);
+	// SQL exception
+	BOOST_TEST_MESSAGE("--- execute SQL error ---");
+	BOOST_CHECK_THROW(myDatabase->execute("select * from unknowtable"),VishnuException);
+	// disconnect from database
+	BOOST_CHECK(myDatabase->disconnect()==0);
+
+}
+
+BOOST_AUTO_TEST_CASE( execute_with_transaction )
+{
+	BOOST_REQUIRE(myDatabase != NULL);
+	// connection to database
+	BOOST_REQUIRE(myDatabase->connect()==0);
+	// start transaction
+	BOOST_CHECK(myDatabase->startTransaction()==0);
+	BOOST_TEST_MESSAGE("--- execute in valid transaction ---");
+	BOOST_CHECK_NO_THROW(myDatabase->execute("select id from paco",0));
+	// transaction 147 out of connection pool size
+	BOOST_TEST_MESSAGE("--- execute in invalid transaction ---");
+	BOOST_CHECK_THROW(myDatabase->execute("select * from paco",147),VishnuException);
+	BOOST_CHECK_NO_THROW(myDatabase->execute("select * from paco",0));
+	// end transaction
+	BOOST_CHECK_NO_THROW(myDatabase->endTransaction(0));
+	// with a required connection pool position
+	BOOST_TEST_MESSAGE("--- execute in inactive transaction ---");
+	BOOST_CHECK_NO_THROW(myDatabase->execute("select * from paco",1));
+	// disconnect from database
+	BOOST_CHECK(myDatabase->disconnect()==0);
+}
+
+
 
 BOOST_AUTO_TEST_CASE( clean_test )
 {

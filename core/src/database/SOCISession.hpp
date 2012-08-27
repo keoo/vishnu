@@ -12,7 +12,7 @@
 #include <boost/scoped_ptr.hpp>
 #include "SystemException.hpp"
 #include "SOCIStatement.hpp"
-#include "SOCITemporaryType.hpp"
+
 
 #ifndef TRYCATCH
 #define TRYCATCH(a,b) \
@@ -21,8 +21,7 @@
 	throw SystemException(ERRCODE_DBERR,std::string(b)+e.what());}
 #endif
 
-
-
+class SOCITemporaryType;
 
 /**
  * \class SOCISession
@@ -67,9 +66,11 @@ public:
 	 * \brief constructor from a pool connection
 	 * \param assession : the session to use
 	 * \param pos : the pool position where assesion is from
+	 * \param apool : the pool wich the session is from
 	 * \param isAutoCommit : option to set if the session is in autocommit mode
 	 */
-	SOCISession(soci::session * asession, size_t pos, bool isAutoCommit = true);
+	SOCISession(soci::session * asession, const size_t pos,
+			soci::connection_pool * apool, bool isAutoCommit = true);
 	/**
 	 * \brief copy constructor
 	 * \param s : the SOCISession to copy
@@ -128,6 +129,14 @@ public:
 	 */
 	SOCITemporaryType
 	operator<<(std::string const & query);
+	/**
+	 * \brief To execute a SQL query that allows exchangind data and then release the session
+	 * \param query : the SQL query string to execute
+	 * \return temporary_type : allows output and input exchanging data
+	 * see temporary_type methods into(..) and use(..)
+	 */
+	SOCITemporaryType
+	executeOnce(std::string const & query);
 
 
 	/**
@@ -148,10 +157,21 @@ public:
 	bool
 	isAutoCommit();
 
+	/**
+	 * \brief To know if the session is in single execution mode
+	 */
+	bool
+	isSingleExecution();
+
+	void
+	release(); //tODO comment
+
 private:
 	soci::session * msession;
+	soci::connection_pool * mpool;
 	size_t pool_position;
 	bool autoCommit;
+	bool singleExecution;
 };
 
 #endif // _SOCISESSION_H_

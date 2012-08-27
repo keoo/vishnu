@@ -515,7 +515,7 @@ SOCIDatabase::generateId(const string & table, const string & fields,
 
 
 SOCISession
-SOCIDatabase::getSingleSession(int transactionId)
+SOCIDatabase::getSingleSession(const int transactionId)
 {
 	if (!is_connected) {
 		throw SystemException(ERRCODE_DBCONN,
@@ -528,11 +528,11 @@ SOCIDatabase::getSingleSession(int transactionId)
 	try {
 		if(transactionId==-1) {
 			conn=getConnection(reqPos);
-			ret  = SOCISession(conn,reqPos,true);
+			ret  = SOCISession(conn,reqPos,mpool.get(),true);
 		}
 		else {
 			conn=&(mpool->at(transactionId));
-			ret = SOCISession(conn,transactionId,false);
+			ret = SOCISession(conn,transactionId,mpool.get(),false);
 		}
 	}
 	catch( exception const & e)	{
@@ -563,6 +563,20 @@ int SOCIDatabase::releaseSingleSession(SOCISession & sess)
 	return SUCCESS;
 }
 
+SOCITemporaryType
+SOCIDatabase::execute(const string & query, const int transactionId) {
+	if (!is_connected) {
+		throw SystemException(ERRCODE_DBCONN,
+				"Cannot execute query, not connected to DB");
+	}
+	SOCISession session = getSingleSession(transactionId);
+	if (transactionId==-1) {
+		return session.executeOnce(query);
+	}
+	else {
+		return session.execute(query);
+	}
+}
 
 
 
