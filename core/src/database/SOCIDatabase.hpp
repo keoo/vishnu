@@ -16,6 +16,7 @@
 #include "DatabaseResult.hpp"
 #include "DbConfiguration.hpp"
 #include "SOCISession.hpp"
+#include "SOCITemporaryType.hpp"
 
 static const int SUCCESS =  0;
 
@@ -129,7 +130,7 @@ public :
    * This id was gotten by method startTransaction()
    */
   SOCISession
-  getSingleSession(int transactionId = -1);
+  getSingleSession(const int transactionId = -1);
   /**
    * \brief To release a single session previously getted
    * \param sess : the single session to release
@@ -137,6 +138,15 @@ public :
    */
   int
   releaseSingleSession(SOCISession & ss);
+ /**
+  * \brief To execute a SQL query that allows exchanging data
+  * \param query : the SQL query string to execute
+  * \param [optional] transactionId: The id of the transaction if there is one
+  * \return temporary_type : allows output and input exchanging data
+  * see temporary_type methods into(..) and use(..)
+  */
+  SOCITemporaryType
+  execute(std::string const & query, const int transactionId = -1);
 
 private :
   /**

@@ -11,7 +11,6 @@
 #include <soci/soci.h>
 #include "SystemException.hpp"
 
-
 class SOCISession;
 
 /**

@@ -6,6 +6,8 @@
  */
 
 #include "SOCISession.hpp"
+#include "SOCITemporaryType.hpp"
+
 
 using namespace std;
 using namespace soci;
@@ -20,21 +22,24 @@ using namespace soci;
  * \brief default constructor
  */
 SOCISession::SOCISession()
-	: msession(NULL),autoCommit(true)
+	: msession(NULL),autoCommit(true),singleExecution(false),mpool(NULL)
 {}
 /*
  * \brief copy constructor
  */
 SOCISession::SOCISession(const SOCISession & s)
-	: msession(s.msession),pool_position(s.pool_position),autoCommit(s.autoCommit)
+	: msession(s.msession),pool_position(s.pool_position),autoCommit(s.autoCommit),
+	  singleExecution(s.singleExecution),mpool(s.mpool)
 {
 
 }
 /*
  * \brief constructor with existing soci session
  */
-SOCISession::SOCISession(soci::session* asession, size_t pos, bool isAutoCommit)
-	: msession(asession),pool_position(pos),autoCommit(isAutoCommit)
+SOCISession::SOCISession(soci::session* asession, const size_t pos,
+		connection_pool * apool, bool isAutoCommit)
+	: msession(asession),pool_position(pos),autoCommit(isAutoCommit),
+	  singleExecution(false),mpool(apool)
 {}
 
 SOCISession::~SOCISession()
@@ -60,6 +65,11 @@ SOCISession::execute(std::string const & query)
 		request.erase(request.length()-1,1);
 	}
 
+	if( request.empty() ) {
+		release();
+		throw SystemException(ERRCODE_DBERR,"Empty SQL request");
+	}
+
 	if (autoCommit) {
 		begin();
 	}
@@ -74,7 +84,11 @@ SOCISession::operator<<(std::string const & query)
 	return execute(query);
 }
 
-
+SOCITemporaryType
+SOCISession::executeOnce(std::string const & query) {
+	singleExecution = true;
+	return execute(query);
+}
 
 
 void
@@ -160,4 +174,19 @@ SOCISession::getPoolPosition()
 bool
 SOCISession::isAutoCommit() {
 	return autoCommit;
+}
+
+bool
+SOCISession::isSingleExecution() {
+	return singleExecution;
+}
+
+void
+SOCISession::release() {
+	try {
+		mpool->give_back(pool_position);
+	}
+	catch (exception const & e) {
+		throw SystemException(ERRCODE_DBERR,string("Cannot release session : ")+e.what());
+	}
 }
