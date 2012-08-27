@@ -39,14 +39,14 @@ SOCIDatabase::process(const string & request, const int transacId)
 	//try to get Connection
 	try {
 		if (transacId == -1) {
-			pconn = getConnection(reqPos);
+			reqPos = startTransaction();
 			pos = reqPos;
 		}
 		else {
 			reqPos = -1;
 			pos = transacId;
-			pconn = &mpool->at(pos);
 		}
+		pconn = &mpool->at(pos);
 	}
 	catch (exception const & e) {
 		throw SystemException(ERRCODE_DBERR, "Cannot get transaction");
@@ -55,7 +55,9 @@ SOCIDatabase::process(const string & request, const int transacId)
 	int res;
 	if (request.empty())
 	{
-		releaseConnection(reqPos);
+		if(transacId==-1) {
+			endTransaction(reqPos);
+		}
 		throw SystemException(ERRCODE_DBERR, "Empty SQL query");
 	}
 
@@ -69,7 +71,7 @@ SOCIDatabase::process(const string & request, const int transacId)
 			}
 			catch (exception const &e) {
 				if (reqPos != -1) {
-					releaseConnection(reqPos);
+					endTransaction(reqPos);
 				}
 				throw SystemException(ERRCODE_DBERR, string("Cannot process request [")
 						+ pconn->get_last_query() +"] \n" + e.what());
@@ -78,7 +80,7 @@ SOCIDatabase::process(const string & request, const int transacId)
 	}
 
 	if (reqPos != -1) {
-		releaseConnection(reqPos);
+		endTransaction(reqPos);
 	}
 
 	return SUCCESS;
@@ -224,7 +226,7 @@ SOCIDatabase::getResult(string request, const int transacId)
 
 	try {
 		if (transacId == -1) {
-			getConnection(reqPos);
+			reqPos = startTransaction();
 			pos = reqPos;
 		}
 		else {
@@ -240,7 +242,9 @@ SOCIDatabase::getResult(string request, const int transacId)
 
 
 	if (request.empty()) {
-		releaseConnection(reqPos);
+		if ( transacId == -1 ) {
+			endTransaction(reqPos);
+		}
 		throw SystemException(ERRCODE_DBERR, "Empty SQL query");
 	}
 
@@ -257,14 +261,14 @@ SOCIDatabase::getResult(string request, const int transacId)
 	}
 	catch (exception const &e) {
 		if(reqPos != -1) {
-				releaseConnection(reqPos);
+				endTransaction(reqPos);
 		}
 		throw SystemException(ERRCODE_DBERR,
 				string("Cannot get query results ["+request+"] \n") + e.what());
 	}
 
 	if(reqPos != -1) {
-		releaseConnection(reqPos);
+		endTransaction(reqPos);
 	}
 	return new DatabaseResult(resultsStr, attributesNames);
 }
@@ -387,13 +391,7 @@ void SOCIDatabase::endTransaction(int transactionID)
 
 	}
 
-	try	{
-		mpool->give_back(pos);
-	}
-	catch (exception const &e) {
-		throw SystemException(ERRCODE_DBERR,
-				string("Cannot end transaction : \n") + e.what());
-	}
+	releaseConnection(pos);
 
 }
 
@@ -530,11 +528,11 @@ SOCIDatabase::getSingleSession(int transactionId)
 	try {
 		if(transactionId==-1) {
 			conn=getConnection(reqPos);
-			ret  = SOCISession(conn,reqPos);
+			ret  = SOCISession(conn,reqPos,true);
 		}
 		else {
 			conn=&(mpool->at(transactionId));
-			ret = SOCISession(conn,transactionId);
+			ret = SOCISession(conn,transactionId,false);
 		}
 	}
 	catch( exception const & e)	{

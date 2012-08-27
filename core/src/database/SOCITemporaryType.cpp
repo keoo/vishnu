@@ -6,6 +6,7 @@
  */
 
 #include "SOCITemporaryType.hpp"
+#include "SOCISession.hpp"
 #include "SystemException.hpp"
 
 using namespace std;
@@ -24,14 +25,14 @@ using namespace soci;
 /**
  * \brief constructor from an existing session
  */
-SOCITemporaryType::SOCITemporaryType(soci::session & sess)
-	:once(sess),nbIntos(0),nbUses(0)
+SOCITemporaryType::SOCITemporaryType(SOCISession & session)
+	:once(session.getAdvanced()),nbIntos(0),nbUses(0),msession(session)
 {}
 /**
  * \brief copy constructor
  */
 SOCITemporaryType::SOCITemporaryType(const SOCITemporaryType & other)
-		:once(other.once),nbIntos(other.nbIntos),nbUses(other.nbUses)
+		:once(other.once),nbIntos(other.nbIntos),nbUses(other.nbUses),msession(other.msession)
 {}
 /**
  * the request was executed on the destructor of the last reference to the temporary type
@@ -44,6 +45,9 @@ SOCITemporaryType::~SOCITemporaryType()
 		once,soci::into(tmp);
 	}
 	TRYCATCH((once.~once_temp_type()),"Failed to execute query \n")
+	if(msession.isAutoCommit()) {
+		msession.commit();
+	}
 }
 
 SOCITemporaryType &

@@ -67,8 +67,9 @@ public:
 	 * \brief constructor from a pool connection
 	 * \param assession : the session to use
 	 * \param pos : the pool position where assesion is from
+	 * \param isAutoCommit : option to set if the session is in autocommit mode
 	 */
-	SOCISession(soci::session * asession, size_t pos);
+	SOCISession(soci::session * asession, size_t pos, bool isAutoCommit = true);
 	/**
 	 * \brief copy constructor
 	 * \param s : the SOCISession to copy
@@ -141,9 +142,16 @@ public:
 	bool
 	got_data();
 
+	/**
+	 * \brief To kwnow if the session is in autocommit mode
+	 */
+	bool
+	isAutoCommit();
+
 private:
 	soci::session * msession;
 	size_t pool_position;
+	bool autoCommit;
 };
 
 #endif // _SOCISESSION_H_

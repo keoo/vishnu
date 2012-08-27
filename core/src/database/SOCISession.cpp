@@ -20,21 +20,21 @@ using namespace soci;
  * \brief default constructor
  */
 SOCISession::SOCISession()
-	: msession(NULL)
+	: msession(NULL),autoCommit(true)
 {}
 /*
  * \brief copy constructor
  */
 SOCISession::SOCISession(const SOCISession & s)
-	: msession(s.msession),pool_position(s.pool_position)
+	: msession(s.msession),pool_position(s.pool_position),autoCommit(s.autoCommit)
 {
 
 }
 /*
  * \brief constructor with existing soci session
  */
-SOCISession::SOCISession(soci::session* asession, size_t pos)
-	: msession(asession),pool_position(pos)
+SOCISession::SOCISession(soci::session* asession, size_t pos, bool isAutoCommit)
+	: msession(asession),pool_position(pos),autoCommit(isAutoCommit)
 {}
 
 SOCISession::~SOCISession()
@@ -60,7 +60,10 @@ SOCISession::execute(std::string const & query)
 		request.erase(request.length()-1,1);
 	}
 
-	SOCITemporaryType ret(*msession);
+	if (autoCommit) {
+		begin();
+	}
+	SOCITemporaryType ret(*this);
 	TRYCATCH( ret.once<<request, "")
 	return ret;
 }
@@ -152,4 +155,9 @@ SOCISession::getPoolPosition()
 		throw SystemException(ERRCODE_DBERR,"session is null");
 	}
 	return pool_position;
+}
+
+bool
+SOCISession::isAutoCommit() {
+	return autoCommit;
 }
