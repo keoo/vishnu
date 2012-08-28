@@ -275,9 +275,7 @@ std::string
 LocalAccountServer::getAttribut(std::string condition, std::string attrname) {
 	std::string ret;
 	std::string sqlCommand("SELECT "+attrname+" FROM account "+condition);
-	SOCISession session=mdatabaseVishnu->getSingleSession();
-	session.execute(sqlCommand).into(ret);
-	mdatabaseVishnu->releaseSingleSession(session);
+	mdatabaseVishnu->execute(sqlCommand).into(ret);
 	return ret;
 }
 

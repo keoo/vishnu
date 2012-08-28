@@ -236,10 +236,8 @@ AuthAccountServer::getData() {
 std::string
 AuthAccountServer::getAttribut(std::string condition, std::string attrname) {
 	std::string sqlCommand("SELECT "+attrname+" FROM authaccount "+condition);
-	SOCISession session = mdatabaseVishnu->getSingleSession();
 	std::string ret;
-	session.execute(sqlCommand).into(ret);
-	mdatabaseVishnu->releaseSingleSession(session);
+	mdatabaseVishnu->execute(sqlCommand).into(ret);
 	return ret;
 }
 

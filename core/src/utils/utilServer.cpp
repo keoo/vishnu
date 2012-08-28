@@ -61,9 +61,7 @@ vishnu::registerSeD(string type, ExecConfiguration config, string& cfg){
   {
 	  DbFactory factory;
 	  SOCIDatabase* database = factory.getDatabaseInstance();
-	  SOCISession session = database->getSingleSession();
-	  session.execute(request).use(PUNDEF).use(type).use(mid).use(s);
-	  database->releaseSingleSession(session);
+	  database->execute(request).use(PUNDEF).use(type).use(mid).use(s);
   }
   catch (SystemException & e)
   {
@@ -452,11 +450,7 @@ vishnu::getAttrVishnu(std::string attrname, std::string vishnuid, int transacId)
   std::string sqlQuery("SELECT "+attrname+" FROM vishnu where vishnuid=:vishnuid");
   std::string result;
   databaseVishnu=factory.getDatabaseInstance();
-  SOCISession session=databaseVishnu->getSingleSession(transacId);
-  session.execute(sqlQuery).use(vishnuid).into(result);
-  if(transacId==-1) {
-	  databaseVishnu->releaseSingleSession(session);
-  }
+  databaseVishnu->execute(sqlQuery,transacId).use(vishnuid).into(result);
   return result;
 }
 /**

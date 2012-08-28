@@ -259,9 +259,7 @@ MachineServer::getAttribut(std::string condition, std::string attrname) {
 
   std::string sqlCommand("SELECT "+attrname+" FROM machine "+condition);
   std::string ret;
-  SOCISession session = mdatabaseVishnu->getSingleSession();
-  session.execute(sqlCommand).into(ret);
-  mdatabaseVishnu->releaseSingleSession(session);
+  mdatabaseVishnu->execute(sqlCommand).into(ret);
   return ret;
 }
 

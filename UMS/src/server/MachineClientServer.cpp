@@ -57,9 +57,7 @@ MachineClientServer::getId() {
   sqlCommand.append(mmachineSSHKey+ "' and name='");
   sqlCommand.append(mhostname+"'");
   std::string retId;
-  SOCISession session = mdatabaseVishnu->getSingleSession();
-  session.execute(sqlCommand).into(retId);
-  mdatabaseVishnu->releaseSingleSession(session);
+  mdatabaseVishnu->execute(sqlCommand).into(retId);
   return retId;
 }
 /**

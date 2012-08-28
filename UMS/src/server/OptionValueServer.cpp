@@ -160,9 +160,7 @@ OptionValueServer::getAttribut(std::string condition, std::string attrname, bool
     sqlCommand = "SELECT "+attrname+" FROM optionvalue "+condition;
   }
   std::string ret;
-  SOCISession session = mdatabaseVishnu->getSingleSession();
-  session.execute(sqlCommand).into(ret);
-  mdatabaseVishnu->releaseSingleSession(session);
+  mdatabaseVishnu->execute(sqlCommand).into(ret);
   return ret;
 }
 /**
