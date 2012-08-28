@@ -478,9 +478,7 @@ UserServer::isAttributOk(std::string attributName, int valueOk) {
 std::string UserServer::getAttribut(std::string condition, std::string attrname) {
   std::string sqlCommand("SELECT "+attrname+" FROM users "+condition);
   std::string ret;
-  SOCISession session = mdatabaseVishnu->getSingleSession();
-  session.execute(sqlCommand).into(ret);
-  mdatabaseVishnu->releaseSingleSession(session);
+  mdatabaseVishnu->execute(sqlCommand).into(ret);
   return ret;
 }
 

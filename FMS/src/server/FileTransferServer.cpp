@@ -352,9 +352,8 @@ void FileTransferServer::updateStatus(const FMS_Data::Status& status,const std::
 
   std::string sqlUpdateRequest = "UPDATE filetransfer "
 		  "SET status=:status, errorMsg=:err where transferid=:tId and status<>2";
-  SOCISession session =FileTransferServer::getDatabaseInstance()->getSingleSession();
-  session.execute(sqlUpdateRequest).use(status).use(errorMsgCleaned).use(transferId);
-  FileTransferServer::getDatabaseInstance()->releaseSingleSession(session);
+  FileTransferServer::getDatabaseInstance()->
+		  execute(sqlUpdateRequest).use(status).use(errorMsgCleaned).use(transferId);
 }
 
 // get error message from database
@@ -362,12 +361,9 @@ void FileTransferServer::updateStatus(const FMS_Data::Status& status,const std::
 string FileTransferServer::getErrorFromDatabase(const std::string& transferid){
 	std::string sqlCommand = "SELECT errormsg from filetransfer where transferid=:tId";
 	std::string errormsg;
-	SOCISession session=FileTransferServer::getDatabaseInstance()->getSingleSession();
-	session.execute(sqlCommand).into(errormsg).use(transferid);
-	FileTransferServer::getDatabaseInstance()->releaseSingleSession(session);
+	FileTransferServer::getDatabaseInstance()->execute(sqlCommand).into(errormsg).use(transferid);
 
 	return errormsg;
-
 }
 
 /**
