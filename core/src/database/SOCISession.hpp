@@ -163,8 +163,11 @@ public:
 	bool
 	isSingleExecution();
 
+	/**
+	 * \brief fonction to release the session by give it back to the pool
+	 */
 	void
-	release(); //tODO comment
+	release();
 
 private:
 	soci::session * msession;
