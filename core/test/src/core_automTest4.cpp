@@ -169,7 +169,10 @@ BOOST_AUTO_TEST_CASE( session_process_test )
 		BOOST_TEST_MESSAGE("--- execute request in valid session ---");
 		BOOST_CHECK_NO_THROW(session.execute("drop table if exists paco"));
 		BOOST_CHECK_NO_THROW(session<<"create table paco(id int, name varchar(255))");
-
+		BOOST_TEST_MESSAGE("--- execute empty request in valid session ---");
+		BOOST_CHECK_THROW(session.execute(""),VishnuException);
+		BOOST_TEST_MESSAGE("--- execute syntax error ---");
+		BOOST_CHECK_THROW(session.execute("aeha kjea ea h"),VishnuException);
 
 		BOOST_CHECK_NO_THROW(myDatabase->releaseSingleSession(session));
 	} catch (exception const & e)
