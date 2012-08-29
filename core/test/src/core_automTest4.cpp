@@ -300,6 +300,30 @@ BOOST_AUTO_TEST_CASE( session_exchange_test )
 	BOOST_CHECK(myDatabase->disconnect()==0);
 }
 
+#ifdef SOCI_USE_BOOST
+BOOST_AUTO_TEST_CASE( session_exchange_boost )
+{
+	BOOST_REQUIRE(myDatabase != NULL);
+	BOOST_CHECK(myDatabase->connect()==0);
+	try{
+		SOCISession session;
+		BOOST_CHECK_NO_THROW(session = myDatabase->getSingleSession());
+		string sql = "select id,name from paco";
+		boost::tuple<int, boost::optional<string> > tuple;
+
+		BOOST_CHECK_NO_THROW(session.execute(sql).into(tuple));
+
+		BOOST_CHECK_NO_THROW(myDatabase->releaseSingleSession(session));
+	} catch (exception const & e)
+	{
+		BOOST_MESSAGE(e.what());
+		BOOST_CHECK(false);
+	}
+
+	BOOST_CHECK(myDatabase->disconnect()==0);
+}
+#endif
+
 BOOST_AUTO_TEST_CASE( type_conversion_init )
 {
 	BOOST_REQUIRE(myDatabase != NULL);

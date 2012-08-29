@@ -7,6 +7,7 @@
 
 #ifndef _SOCIDATABASE_H_
 #define _SOCIDATABASE_H_
+#define SOCI_USE_BOOST
 
 #include <vector>
 #include <boost/scoped_ptr.hpp>
