@@ -32,6 +32,13 @@ SOCIDatabase::process(const string & request, const int transacId)
 		throw SystemException(ERRCODE_DBCONN,
 				"Cannot process request, not connected to DB");
 	}
+
+	if (request.empty())
+	{
+		throw SystemException(ERRCODE_DBERR, "Empty SQL query");
+	}
+
+
 	int reqPos = -1;
 	soci::session * pconn;
 	size_t pos;
@@ -52,14 +59,6 @@ SOCIDatabase::process(const string & request, const int transacId)
 		throw SystemException(ERRCODE_DBERR, "Cannot get transaction");
 	}
 
-	int res;
-	if (request.empty())
-	{
-		if(transacId==-1) {
-			endTransaction(reqPos);
-		}
-		throw SystemException(ERRCODE_DBERR, "Empty SQL query");
-	}
 
 	// To separate que request in case of multiple statements
 	vector<string> requests=split(request,';');

@@ -30,7 +30,7 @@ UMSAuthenticator::authenticate(UMS_Data::User& user) {
   SOCISession sess=databaseVishnu->getSingleSession();
   int id;
   sess.execute(sqlCommand).into(id).use(user.getUserId()).use(user.getPassword());
-  bool gotId=sess.got_data();
+  bool gotId=sess.gotData();
   databaseVishnu->releaseSingleSession(sess);
   return gotId;
 

@@ -149,7 +149,7 @@ public:
 	 * \brief To know if last SQL query returned some result
 	 */
 	bool
-	got_data();
+	gotData();
 
 	/**
 	 * \brief To kwnow if the session is in autocommit mode

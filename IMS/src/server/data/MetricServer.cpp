@@ -120,7 +120,7 @@ MetricServer::addMetricSet(IMS_Data::ListMetric* set, string mid){
     SOCISession session = mdatabase->getSingleSession();
     std::string res;
     session.execute(reqnmid).use(mid).into(res);
-    bool got_data=session.got_data();
+    bool got_data=session.gotData();
     mdatabase->releaseSingleSession(session);
     if(! got_data) {
       throw IMSVishnuException(ERRCODE_INVPROCESS, "Unknown machine id");
@@ -185,7 +185,7 @@ MetricServer::checkUpFreq(){
   SOCISession session = mdatabase->getSingleSession();
   int freq;
   session.execute(request).use(mvishnuId).into(freq);
-  bool got_data=session.got_data();
+  bool got_data=session.gotData();
   mdatabase->releaseSingleSession(session);
   if(! got_data) {
      throw IMSVishnuException(ERRCODE_INVVISHNU, "Unknown VISHNU id");
@@ -258,7 +258,7 @@ MetricServer::getHistMet(string machineId){
 
   SOCISession session = mdatabase->getSingleSession();
   session.execute(reqnmid);
-  bool got_data=session.got_data();
+  bool got_data=session.gotData();
   mdatabase->releaseSingleSession(session);
   if(! got_data) {
     throw IMSVishnuException(ERRCODE_INVPROCESS, "Unknown machine id");

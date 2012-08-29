@@ -47,7 +47,7 @@ void FileTransferServer::checkTransferId(std::string transferId) {
 			"SELECT transferId from filetransfer where transferId=:param";
 	SOCISession session= FileTransferServer::getDatabaseInstance()->getSingleSession();
 	session.execute(sqlTransferRequest).use(transferId);
-	bool got_data=session.got_data();
+	bool got_data=session.gotData();
 	FileTransferServer::getDatabaseInstance()->releaseSingleSession(session);
 	if(! got_data){
 		throw UserException(ERRCODE_INVALID_PARAM, "Invalid transfer identifier");

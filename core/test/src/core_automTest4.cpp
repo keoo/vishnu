@@ -234,11 +234,11 @@ BOOST_AUTO_TEST_CASE( session_exchange_test )
 		BOOST_CHECK(reqname==name);
 		//testing boolean got data
 		BOOST_TEST_MESSAGE("--- exchange output data with no result ---");
-		BOOST_CHECK(session.got_data()==true);
+		BOOST_CHECK(session.gotData()==true);
 		BOOST_CHECK_NO_THROW(session.execute(request2+"id=147").into(reqid).into(reqname));
 		BOOST_CHECK(reqid==6);
 		BOOST_CHECK(reqname==name);
-		BOOST_CHECK(session.got_data()==false);
+		BOOST_CHECK(session.gotData()==false);
 
 		// reading null value in 'name'
 		BOOST_TEST_MESSAGE("--- exchange output data reading null value ---");
