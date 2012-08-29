@@ -82,7 +82,7 @@ ThresholdServer::getThreshold() {
 
     SOCISession session = mdatabase->getSingleSession();
     session.execute(reqnmid);
-    bool got_data=session.got_data();
+    bool got_data=session.gotData();
     mdatabase->releaseSingleSession(session);
     if(! got_data) {
         throw IMSVishnuException(ERRCODE_INVPROCESS, "Unknown machine id");
@@ -126,7 +126,7 @@ ThresholdServer::checkExist(IMS_Data::Threshold_ptr tree) {
     // Executing the request and getting the results
   SOCISession session = mdatabase->getSingleSession();
   session.execute(req);
-  bool got_data=session.got_data();
+  bool got_data=session.gotData();
   mdatabase->releaseSingleSession(session);
   return got_data; 
   } catch (SystemException& e) {
@@ -148,7 +148,7 @@ ThresholdServer::getUserAndMachine(IMS_Data::Threshold_ptr tree, string &nuid, s
 	req="SELECT nummachineid from machine where machineid='"+tree->getMachineId()+"'";
 	string nummid;
 	session.execute(req).into(nummid);
-	bool got_data = session.got_data();
+	bool got_data = session.gotData();
 	if (! got_data) {
 		throw UserException(ERRCODE_INVALID_PARAM, "Invalid machine id for the threshold");
 	}
@@ -164,7 +164,7 @@ ThresholdServer::getUserAndMachine(IMS_Data::Threshold_ptr tree, string &nuid, s
   SOCISession session =mdatabase->getSingleSession();
   string numuid; int privilege;
   session.execute(req).into(numuid).into(privilege);
-  bool got_data = session.got_data();
+  bool got_data = session.gotData();
   mdatabase->releaseSingleSession(session);
   if(! got_data) {
       throw UserException(ERRCODE_INVALID_PARAM, "Unknown handler for the threshold");

@@ -29,7 +29,7 @@ SysInfoServer::getSysInfo() {
 
     SOCISession session = mdatabase->getSingleSession();
     session.execute(reqnmid);
-    bool got_data=session.got_data();
+    bool got_data=session.gotData();
     mdatabase->releaseSingleSession(session);
     if( ! got_data ) {
         throw IMSVishnuException(ERRCODE_INVPROCESS, "Unknown machine id");
@@ -82,7 +82,7 @@ SysInfoServer::setSysInfo(IMS_Data::SystemInfo_ptr sys) {
 
   SOCISession session = mdatabase->getSingleSession();
   session.execute(reqnmid);
-  bool got_data = session.got_data();
+  bool got_data = session.gotData();
   mdatabase->releaseSingleSession(session);
   if ( ! got_data) {
 	 throw IMSVishnuException(ERRCODE_INVPROCESS, "Unknown machine id");

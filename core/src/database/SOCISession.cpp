@@ -66,12 +66,16 @@ SOCISession::execute(std::string const & query)
 	}
 
 	if( request.empty() ) {
-		release();
 		throw SystemException(ERRCODE_DBERR,"Empty SQL request");
 	}
 
 	if (autoCommit) {
 		begin();
+		/* The transaction just started above is only for this execution
+		 * We have to stay in autoCommit mode, because the SOCITemporyType
+		 * should know that he must commit the transaction.
+		 */
+		autoCommit = true;
 	}
 	SOCITemporaryType ret(*this);
 	TRYCATCH( ret.once<<request, "")
@@ -98,6 +102,7 @@ SOCISession::begin()
 		throw SystemException(ERRCODE_DBERR,"Cannot begin : session is null");
 	}
 	TRYCATCH(msession->begin(),"Cannot begin transaction \n");
+	autoCommit = false;
 }
 void
 SOCISession::commit()
@@ -112,6 +117,7 @@ SOCISession::commit()
 		throw SystemException(ERRCODE_DBERR,
 				std::string("Cannot commit transaction : \n") + e.what());
 	}
+	autoCommit = true;
 }
 void
 SOCISession::rollback()
@@ -128,6 +134,7 @@ SOCISession::rollback()
 		throw SystemException(ERRCODE_DBERR,
 				std::string("Cannot commit transaction : \n") + e.what());
 	}
+	autoCommit = true;
 }
 
 SOCIStatement
@@ -140,7 +147,7 @@ SOCISession::getStatement()
 }
 
 bool
-SOCISession::got_data()
+SOCISession::gotData()
 {
 	if(msession==NULL) {
 		throw SystemException(ERRCODE_DBERR,"session is null");
@@ -189,4 +196,5 @@ SOCISession::release() {
 	catch (exception const & e) {
 		throw SystemException(ERRCODE_DBERR,string("Cannot release session : ")+e.what());
 	}
+	*this=SOCISession();
 }

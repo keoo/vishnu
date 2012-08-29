@@ -183,7 +183,7 @@ protected:
 	  SOCISession ss = mdatabaseVishnu->getSingleSession();
 	  std::string DBuserID;
 	  ss.execute(sqlUserRequest).into(DBuserID).use(userId);
-	  bool gotUser=ss.got_data();
+	  bool gotUser=ss.gotData();
 	  mdatabaseVishnu->releaseSingleSession(ss);
 	  if(! gotUser) {
 		  throw UMSVishnuException(ERRCODE_UNKNOWN_USERID);
@@ -202,7 +202,7 @@ protected:
 	  SOCISession ss = mdatabaseVishnu->getSingleSession();
 	  std::string id;
 	  ss.execute(sqlMachineRequest).into(id).use(machineId);
-	  bool gotMachine=ss.got_data();
+	  bool gotMachine=ss.gotData();
 	  mdatabaseVishnu->releaseSingleSession(ss);
 	  if(! gotMachine) {
 		  throw UMSVishnuException(ERRCODE_UNKNOWN_MACHINE);
@@ -221,7 +221,7 @@ protected:
 	  SOCISession ss = mdatabaseVishnu->getSingleSession();
 	  std::string name;
 	  ss.execute(sqlclMachineRequest).into(name).use(clmachineId);
-	  bool gotMachine=ss.got_data();
+	  bool gotMachine=ss.gotData();
 	  mdatabaseVishnu->releaseSingleSession(ss);
 	  if(! gotMachine) {
 		  throw UMSVishnuException(ERRCODE_UNKNOWN_MACHINE);
@@ -241,7 +241,7 @@ protected:
 	  SOCISession ss = mdatabaseVishnu->getSingleSession();
 	  std::string description;
 	  ss.execute(sqlNameRequest).into(description).use(name);
-	  bool gotOption=ss.got_data();
+	  bool gotOption=ss.gotData();
 	  mdatabaseVishnu->releaseSingleSession(ss);
 	  if(! gotOption) {
 		  throw UMSVishnuException(ERRCODE_UNKNOWN_OPTION);
@@ -259,7 +259,7 @@ protected:
 	  SOCISession sess = mdatabaseVishnu->getSingleSession();
 	  std::string vssessionid;
 	  sess.execute(sqlSessionRequest).use(sessionId).into(vssessionid);
-	  bool gotSession=sess.got_data();
+	  bool gotSession=sess.gotData();
 	  mdatabaseVishnu->releaseSingleSession(sess);
 	  if(!gotSession)
 	  {
@@ -300,7 +300,7 @@ protected:
 	  std::string numjobid;
 	  SOCISession sess=mdatabaseVishnu->getSingleSession();
 	  sess.execute(sqlJobRequest).use(jobId).into(numjobid);
-	  bool gotJob=sess.got_data();
+	  bool gotJob=sess.gotData();
 	  mdatabaseVishnu->releaseSingleSession(sess);
 	  if(!gotJob)
 	  {
@@ -319,7 +319,7 @@ protected:
       std::string ret;
       SOCISession sess=mdatabaseVishnu->getSingleSession();
       sess.execute(sqlJobRequest).into(ret).use(authSystemId);
-      bool gotAuth=sess.got_data();
+      bool gotAuth=sess.gotData();
       mdatabaseVishnu->releaseSingleSession(sess);
       if(!gotAuth)
       {

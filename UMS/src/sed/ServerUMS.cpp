@@ -100,7 +100,7 @@ ServerUMS::init(int vishnuId,
     /* Checking of vishnuid on the database */
     SOCISession session = mdatabaseVishnu->getSingleSession();
     session.execute(sqlCommand);
-    bool got_data=session.got_data();
+    bool got_data=session.gotData();
     mdatabaseVishnu->releaseSingleSession(session);
     if(! got_data){
         SystemException e(ERRCODE_DBERR, "The vishnuid is unrecognized");

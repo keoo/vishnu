@@ -67,7 +67,7 @@ void ListUsersServer::processOptions(UserServer userServer, const UMS_Data::List
     sqlRequest.append("'"+userId+"'");
     SOCISession session=mdatabaseVishnu->getSingleSession();
     session.execute(sqlRequest);
-    bool got_data = session.got_data();
+    bool got_data = session.gotData();
     mdatabaseVishnu->releaseSingleSession(session);
     if(! got_data) {
         UMSVishnuException e(ERRCODE_UNKNOWN_USERID);

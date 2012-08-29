@@ -38,7 +38,7 @@ ProcessServer::list(){
     string machine = "SELECT machineid from machine where machineid='"+mop->getMachineId()+"'";
     SOCISession session = mdatabase->getSingleSession();
     session.execute(machine);
-    bool got_data=session.got_data();
+    bool got_data=session.gotData();
     mdatabase->releaseSingleSession(session);
     if(! got_data) {
         throw UMSVishnuException(ERRCODE_UNKNOWN_MACHINE,"Unknown machine id to list the processes over");
@@ -155,7 +155,7 @@ ProcessServer::isIMSSeD(string Pname){
 	SOCISession session = mdatabase->getSingleSession();
 	string res;
 	session.execute(req).into(res);
-	bool got_data=session.got_data();
+	bool got_data=session.gotData();
 	mdatabase->releaseSingleSession(session);
 	if( ! got_data) {
 	    throw IMSVishnuException(ERRCODE_INVPROCESS, "Unknown process");
@@ -205,7 +205,7 @@ ProcessServer::checkStopped(string machine, string type) {
   try {
 	  SOCISession session = mdatabase->getSingleSession();
 	  session.execute(req);
-	  bool got_data=session.got_data();
+	  bool got_data=session.gotData();
 	  mdatabase->releaseSingleSession(session);
 	  return got_data;
   } catch (SystemException& e) {
@@ -220,7 +220,7 @@ ProcessServer::getHost(string mid, string& hostname, string& acclog) {
 	SOCISession session=mdatabase->getSingleSession();
 	string nummachineid, name;
 	session.execute(req).use(mid).into(nummachineid).into(name);
-	if(! session.got_data()) {
+	if(! session.gotData()) {
 		mdatabase->releaseSingleSession(session);
 		throw UMSVishnuException(ERRCODE_UNKNOWN_MACHINE, "Machine not found");
 	}
@@ -231,7 +231,7 @@ ProcessServer::getHost(string mid, string& hostname, string& acclog) {
 	"and account.machine_nummachineid=:param";
 	string aclogin;
 	session.execute(req).use(nummachineid).into(aclogin);
-	if(! session.got_data()){
+	if(! session.gotData()){
 		mdatabase->releaseSingleSession(session);
 	    throw UMSVishnuException(ERRCODE_UNKNOWN_LOCAL_ACCOUNT, "No account found to restart the machine"+mid);
 	}
@@ -251,7 +251,7 @@ ProcessServer::getElectedMid() {
   SOCISession session=mdatabase->getSingleSession();
   string result;
   session.execute(req).into(result);
-  bool got_data=session.got_data();
+  bool got_data=session.gotData();
   mdatabase->releaseSingleSession(session);
 
   if( ! got_data ){

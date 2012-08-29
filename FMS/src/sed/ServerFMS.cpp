@@ -79,7 +79,7 @@ ServerFMS::init(int vishnuId,
     sqlCommand="SELECT vishnuid FROM vishnu where vishnuid=:param";
     SOCISession session = mdatabaseVishnu->getSingleSession();
     session.execute(sqlCommand).use(mvishnuId);
-    bool got_id = session.got_data();
+    bool got_id = session.gotData();
     mdatabaseVishnu->releaseSingleSession(session);
     if(! got_id){
     	SystemException e(ERRCODE_DBERR, "The vishnuid is unrecognized");
