@@ -25,8 +25,10 @@ using namespace soci;
  * \brief constructor from an existing session
  */
 SOCITemporaryType::SOCITemporaryType(SOCISession & session)
-	:once(session.getAdvanced()),nbIntos(0),nbUses(0),msession(session)
-{}
+	:nbIntos(0),nbUses(0),msession(session)
+{
+	once = new soci::details::once_temp_type(session.getAdvanced());
+}
 /**
  * \brief copy constructor
  */
@@ -41,9 +43,15 @@ SOCITemporaryType::~SOCITemporaryType()
 {
 	string tmp;
 	if(nbIntos==0) {
-		once,soci::into(tmp);
+		(*once),soci::into(tmp);
 	}
-	TRYCATCH((once.~once_temp_type()),"Failed to execute query \n")
+	try {
+		delete once;
+	}
+	catch (std::exception const & e) {
+		throw SystemException(ERRCODE_DBERR,std::string("Failed to execute query \n")+e.what());
+	}
+
 	if( msession.isAutoCommit() ) {
 		msession.commit();
 	}
@@ -56,7 +64,7 @@ SOCITemporaryType::~SOCITemporaryType()
 SOCITemporaryType &
 SOCITemporaryType::exchange(details::use_type_ptr const & in)
 {
-	TRYCATCH((once,in), "")
+	TRYCATCH(((*once),in), "")
 	nbUses++;
 	return *this;
 }
@@ -64,7 +72,7 @@ SOCITemporaryType::exchange(details::use_type_ptr const & in)
 SOCITemporaryType &
 SOCITemporaryType::exchange(details::into_type_ptr const & out)
 {
-	TRYCATCH((once,out), "")
+	TRYCATCH(((*once),out), "")
 	nbIntos++;
 	return *this;
 }

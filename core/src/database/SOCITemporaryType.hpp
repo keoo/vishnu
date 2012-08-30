@@ -26,7 +26,7 @@ public:
 	 * \brief the soci implementation of the temporary type
 	 * once_temp_type in one of the two soci temporary type
 	 */
-	soci::details::once_temp_type once;
+	soci::details::once_temp_type * once;
 
 	/**
 	 * \brief constructor from an existing session
