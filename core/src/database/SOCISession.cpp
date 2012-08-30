@@ -60,13 +60,17 @@ SOCISession::execute(std::string const & query)
 		throw SystemException(ERRCODE_DBERR,"Cannot execute : session is null");
 	}
 	std::string request=query;
-	// SOCI for ORACLE does not support semi-colom
-	while (msession->get_backend_name()=="oracle" && query[query.length()-1] == ';') {
-		request.erase(request.length()-1,1);
-	}
 
 	if( request.empty() ) {
 		throw SystemException(ERRCODE_DBERR,"Empty SQL request");
+	}
+
+	// SOCI for ORACLE does not support semi-colom
+	while (msession->get_backend_name()=="oracle" && query[query.length()-1] == ';') {
+		request.erase(request.length()-1,1);
+		if( request.empty() ) {
+			throw SystemException(ERRCODE_DBERR,"Empty SQL request");
+		}
 	}
 
 	if (autoCommit) {
@@ -78,7 +82,7 @@ SOCISession::execute(std::string const & query)
 		autoCommit = true;
 	}
 	SOCITemporaryType ret(*this);
-	TRYCATCH( ret.once<<request, "")
+	TRYCATCH( (*ret.once)<<request, "")
 	return ret;
 }
 
