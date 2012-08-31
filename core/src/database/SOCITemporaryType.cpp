@@ -49,6 +49,12 @@ SOCITemporaryType::~SOCITemporaryType()
 		delete once;
 	}
 	catch (std::exception const & e) {
+		if( msession.isAutoCommit() ) {
+			msession.rollback();
+		}
+		if( msession.isSingleExecution() ) {
+			msession.release();
+		}
 		throw SystemException(ERRCODE_DBERR,std::string("Failed to execute query \n")+e.what());
 	}
 
@@ -56,7 +62,6 @@ SOCITemporaryType::~SOCITemporaryType()
 		msession.commit();
 	}
 	if( msession.isSingleExecution() ) {
-		//TODO : relâcher la session
 		msession.release();
 	}
 }
