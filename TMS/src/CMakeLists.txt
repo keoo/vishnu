@@ -10,6 +10,7 @@ include_directories(client api
   ${VISHNU_EXCEPTION_INCLUDE_DIR}
   ${Boost_INCLUDE_DIRS}
   ${PROJECT_BINARY_DIR}/include/
+  ${DATABASE_INCLUDE_DIR}
 )
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/server/SGEConfig.hpp.in
