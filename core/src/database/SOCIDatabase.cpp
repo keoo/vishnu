@@ -155,8 +155,8 @@ SOCIDatabase::connect()
  * \brief Constructor, raises an exception on error
  */
 SOCIDatabase::SOCIDatabase(const DbConfiguration & dbConfig) :
-	mconfig(dbConfig), mdbtype(dbConfig.getDbType()),
-	mpool(new connection_pool(mconfig.getDbPoolSize()))
+  mconfig(dbConfig), mpool(new connection_pool(mconfig.getDbPoolSize())),
+  mdbtype(dbConfig.getDbType())
 {
 	//mpool = new connection_pool(mconfig.getDbPoolSize());
 	is_connected = false;
