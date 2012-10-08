@@ -25,7 +25,7 @@ using namespace soci;
  * \brief constructor from an existing session
  */
 SOCITemporaryType::SOCITemporaryType(SOCISession & session)
-	:nbIntos(0),nbUses(0),msession(session)
+	:nbUses(0),nbIntos(0),msession(session)
 {
 	once = new soci::details::once_temp_type(session.getAdvanced());
 }
@@ -33,7 +33,7 @@ SOCITemporaryType::SOCITemporaryType(SOCISession & session)
  * \brief copy constructor
  */
 SOCITemporaryType::SOCITemporaryType(const SOCITemporaryType & other)
-		:once(other.once),nbIntos(other.nbIntos),nbUses(other.nbUses),msession(other.msession)
+		:once(other.once),nbUses(other.nbUses),nbIntos(other.nbIntos),msession(other.msession)
 {}
 /**
  * the request was executed on the destructor of the last reference to the temporary type

@@ -28,8 +28,8 @@ SOCISession::SOCISession()
  * \brief copy constructor
  */
 SOCISession::SOCISession(const SOCISession & s)
-	: msession(s.msession),pool_position(s.pool_position),autoCommit(s.autoCommit),
-	  singleExecution(s.singleExecution),mpool(s.mpool)
+	: msession(s.msession),mpool(s.mpool),pool_position(s.pool_position),autoCommit(s.autoCommit),
+	  singleExecution(s.singleExecution)
 {
 
 }
@@ -38,8 +38,8 @@ SOCISession::SOCISession(const SOCISession & s)
  */
 SOCISession::SOCISession(soci::session* asession, const size_t pos,
 		connection_pool * apool, bool isAutoCommit)
-	: msession(asession),pool_position(pos),autoCommit(isAutoCommit),
-	  singleExecution(false),mpool(apool)
+	: msession(asession),mpool(apool),pool_position(pos),autoCommit(isAutoCommit),
+	  singleExecution(false)
 {}
 
 SOCISession::~SOCISession()

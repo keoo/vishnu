@@ -8,6 +8,7 @@ include_directories(client api
   ${UTILVISHNU_SOURCE_DIR}
   ${VISHNU_EXCEPTION_INCLUDE_DIR}
   ${Boost_INCLUDE_DIRS}
+  ${DATABASE_INCLUDE_DIR}
 )
 
 set(client_SRCS client/FileProxy

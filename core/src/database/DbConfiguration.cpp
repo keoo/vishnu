@@ -15,8 +15,8 @@ const int DbConfiguration::defaultDbPoolSize = 10;  //%RELAX<MISRA_0_1_3> Used i
  * \brief Constructor
  * \param execConfig  the configuration of the program
  */
-DbConfiguration::DbConfiguration(const ExecConfiguration& execConfig) : mexecConfig(execConfig),
-mdbPort(0), mdbPoolSize(defaultDbPoolSize), mdbType(POSTGRESQL)
+DbConfiguration::DbConfiguration(const ExecConfiguration& execConfig) : mexecConfig(execConfig), mdbType(POSTGRESQL),
+mdbPort(0), mdbPoolSize(defaultDbPoolSize)
 {
 }
 
