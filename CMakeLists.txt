@@ -118,6 +118,8 @@ if (COMPILE_TMS AND NOT CLIENT_ONLY) # AND NOT VISHNU_USE_LOADLEVELER AND NOT VI
   endif()
 endif()
 
+add_definitions(-DSOCI_USE_BOOST)
+
 if (COMPILE_TMS)
   add_definitions(-DCOMPILE_TMS)
   string(REPLACE "." "_" batch_version_tmp ${VISHNU_BATCH_VERSION})
